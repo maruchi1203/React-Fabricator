@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import HomeLayout from "./ui/routes/home-layout";
-import LoadingScreen from "./ui/components/loading-screen";
+import LoadingScreen from "./ui/components/general/loading-screen";
 import FabricateLayout from "./ui/routes/fabricate-layout";
 import EmptyTemplate from "./ui/templates/empty-template";
 import BasicTemplate from "./ui/templates/basic-template";
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
         element: <EmptyTemplate />,
       },
       {
-        path: "/basic",
+        path: "basic",
         element: <BasicTemplate />,
       },
     ],
@@ -47,6 +47,7 @@ const GlobalStyles = createGlobalStyle`
 const Wrapper = styled.div`
   height: 100vh;
   display: flex;
+  background-color: black;
   justify-content: center;
 `;
 
@@ -58,7 +59,7 @@ function App() {
   }, []);
 
   return (
-    <Wrapper>
+    <Wrapper id="root">
       <GlobalStyles />
       {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
     </Wrapper>
