@@ -1,30 +1,22 @@
-import styled from "styled-components";
-import { useLocation } from "react-router-dom";
+import React from "react";
 import EmptyTemplate from "../../templates/empty-template";
-import BasicTemplate from "../../templates/basic-template";
 
-const Wrapper = styled.div`
-  width: 100%;
+interface PageViewProps {
+  onDragOverEvent: (e: React.DragEvent) => void;
+  onDragLeaveEvent: (e: React.DragEvent) => void;
+  onDropEvent: (e: React.DragEvent) => void;
+  [x: string]: unknown;
+}
 
-  align-items: center;
-  justify-items: center;
-`;
+export default function PageView(props: PageViewProps) {
+  const { onDragOverEvent, onDragLeaveEvent, onDropEvent, ...other } = props;
 
-export default function PageView() {
-  const location = useLocation().pathname.split("/");
-
-  switch (location[location.length - 1]) {
-    case "basic":
-      return (
-        <Wrapper>
-          <BasicTemplate></BasicTemplate>
-        </Wrapper>
-      );
-    default:
-      return (
-        <Wrapper>
-          <EmptyTemplate></EmptyTemplate>
-        </Wrapper>
-      );
-  }
+  return (
+    <EmptyTemplate
+      onDragOverEvent={onDragOverEvent}
+      onDragLeaveEvent={onDragLeaveEvent}
+      onDropEvent={onDropEvent}
+      {...other}
+    />
+  );
 }

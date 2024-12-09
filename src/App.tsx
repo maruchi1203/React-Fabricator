@@ -1,34 +1,16 @@
-import { useEffect, useState } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import HomeLayout from "./ui/routes/home-layout";
-import LoadingScreen from "./ui/components/general/loading-screen";
 import FabricateLayout from "./ui/routes/fabricate-layout";
-import EmptyTemplate from "./ui/templates/empty-template";
-import BasicTemplate from "./ui/templates/basic-template";
 import styled, { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <HomeLayout />,
-  },
-  {
-    path: "/fabricate",
-    element: <FabricateLayout />,
-    children: [
-      {
-        path: "",
-        element: <EmptyTemplate />,
-      },
-      {
-        path: "basic",
-        element: <BasicTemplate />,
-      },
-    ],
-  },
-]);
+const Wrapper = styled.div`
+  height: 100vh;
+  display: flex;
+  background-color: black;
+  justify-content: center;
+`;
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -44,24 +26,22 @@ const GlobalStyles = createGlobalStyle`
   }
 `;
 
-const Wrapper = styled.div`
-  height: 100vh;
-  display: flex;
-  background-color: black;
-  justify-content: center;
-`;
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomeLayout />,
+  },
+  {
+    path: "/fabricate",
+    element: <FabricateLayout />,
+  },
+]);
 
 function App() {
-  const [isLoading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
-
   return (
-    <Wrapper id="root">
+    <Wrapper>
       <GlobalStyles />
-      {isLoading ? <LoadingScreen /> : <RouterProvider router={router} />}
+      <RouterProvider router={router} />
     </Wrapper>
   );
 }

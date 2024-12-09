@@ -1,13 +1,56 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
-export default function EmptyTemplate() {
-  const [scale, setScale] = useState<number>(1);
-  const basicWidth = useRef(window.innerWidth);
-  const basicHeight = useRef(window.innerHeight);
+interface EmptyTemplateProps {
+  onDragOverEvent: (e: React.DragEvent) => void;
+  onDragLeaveEvent: (e: React.DragEvent) => void;
+  onDropEvent: (e: React.DragEvent) => void;
+  [x: string]: unknown;
+}
+
+const Wrapper = styled.div`
+  width: 100px;
+  height: 100px;
+  min-width: 100%;
+  min-height: 100%;
+
+  align-content: center;
+  justify-items: center;
+`;
+
+const InnerPage = styled.div`
+  width: 100px;
+  height: 100px;
+
+  background-color: black;
+`;
+
+const InteractionPage = styled.div`
+  width: 100%;
+  height: 100%;
+
+  background-color: white;
+`;
+
+export default function EmptyTemplate(props: EmptyTemplateProps) {
+  const { onDragOverEvent, onDragLeaveEvent, onDropEvent, ...other } = props;
+  const [scale, setScale] = useState(1);
+  const basicWidth = useRef(1200);
+  const basicHeight = useRef(800);
 
   useEffect(() => {
-    (document.getElementById("root") as HTMLDivElement).addEventListener(
+    const pageView = document.getElementById("page-view") as HTMLDivElement;
+    const innerPage = document.getElementById("inner-page") as HTMLDivElement;
+
+    pageView.style.width = `${basicWidth.current * scale + 200}px`;
+    pageView.style.height = `${basicHeight.current * scale + 200}px`;
+
+    innerPage.style.width = `${basicWidth.current * scale}px`;
+    innerPage.style.height = `${basicHeight.current * scale}px`;
+  }, []);
+
+  useEffect(() => {
+    (document.getElementById("page-view") as HTMLDivElement).addEventListener(
       "wheel",
       (e: WheelEvent) => {
         if (e.ctrlKey) e.preventDefault();
@@ -15,45 +58,36 @@ export default function EmptyTemplate() {
       true
     );
 
-    (document.getElementById("inner-page") as HTMLDivElement).addEventListener(
-      "wheel",
-      (e: WheelEvent) => {
-        if (e.ctrlKey) {
-          const updown = e.deltaY > 0 ? -1 : 1;
-          const deltaValue = scale + 0.1 * updown;
-          if (0.5 < deltaValue && deltaValue < 1.5) {
-            setScale(deltaValue);
-          }
+    const pageView = document.getElementById("page-view") as HTMLDivElement;
+    const innerPage = document.getElementById("inner-page") as HTMLDivElement;
 
-          console.log(scale);
-        }
-      },
-      true
-    );
+    pageView.style.width = `${basicWidth.current * scale + 200}px`;
+    pageView.style.height = `${basicHeight.current * scale + 200}px`;
+
+    innerPage.style.width = `${basicWidth.current * scale}px`;
+    innerPage.style.height = `${basicHeight.current * scale}px`;
   }, [scale]);
 
-  const InnerPage = styled.div`
-    width: ${basicWidth.current * scale}px;
-    height: ${basicHeight.current * scale}px;
+  const onWheelEvent = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey) {
+      const updown = e.deltaY > 0 ? -1 : 1;
+      const deltaValue = Number.parseFloat((scale + 0.1 * updown).toFixed(1));
 
-    margin: 100px;
-
-    background-color: black;
-  `;
-
-  const InteractionPage = styled.div`
-    width: 100%;
-
-    background-color: white;
-  `;
-
-  const onDragOverEvent = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+      if (0.1 <= deltaValue && deltaValue <= 2) {
+        setScale(deltaValue);
+      }
+    }
   };
 
   return (
-    <InnerPage id="inner-page" tabIndex={0}>
-      <InteractionPage onDragOver={onDragOverEvent}></InteractionPage>
-    </InnerPage>
+    <Wrapper id="page-view" tabIndex={0} onWheel={onWheelEvent}>
+      <InnerPage id="inner-page" tabIndex={1}>
+        <InteractionPage
+          onDragOver={onDragOverEvent}
+          onDragLeave={onDragLeaveEvent}
+          onDrop={onDropEvent}
+        />
+      </InnerPage>
+    </Wrapper>
   );
 }

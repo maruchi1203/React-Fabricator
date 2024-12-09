@@ -6,6 +6,10 @@ interface ComponentProps {
 }
 
 const Wrapper = styled.div`
+  width: 150px;
+  height: 100px;
+
+  background-color: white;
   border: 1px solid black;
 `;
 

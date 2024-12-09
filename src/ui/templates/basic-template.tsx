@@ -9,5 +9,5 @@ export default function BasicTemplate() {
     flex-direction: column;
   `;
 
-  return <Wrapper></Wrapper>;
+  return <Wrapper id="page-view"></Wrapper>;
 }

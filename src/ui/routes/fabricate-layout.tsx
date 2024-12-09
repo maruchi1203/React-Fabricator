@@ -3,7 +3,7 @@ import UpperToolBar from "../components/fabricate-views/upper-toolbar";
 import PageView from "../components/fabricate-views/page-view";
 import HierarchyView from "../components/fabricate-views/hierarchy-view";
 import EntityView from "../components/fabricate-views/entity-view";
-import React from "react";
+import React, { useRef } from "react";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -41,15 +41,11 @@ const PageViewContainer = styled.div`
     border-radius: 5px;
 
     background-color: lightgray;
-    opacity: 0.1;
   }
 
   &::-webkit-scrollbar-corner,
   &::-webkit-scrollbar-button {
     display: none;
-  }
-
-  &::-webkit-scrollbar-track-piece {
   }
 `;
 
@@ -63,14 +59,56 @@ const SideViewContainer = styled.div`
 `;
 
 export default function FabricateLayout() {
+  const dragElem = useRef<HTMLElement | null>(null);
+
+  const onDragStartEvent = (e: React.DragEvent) => {
+    dragElem.current = e.target as HTMLElement;
+    console.log(dragElem.current);
+  };
+
+  const onDragEndEvent = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragElem.current = null;
+  };
+
+  const onDragOverEvent = (e: React.DragEvent) => {
+    e.preventDefault();
+
+    (e.target as HTMLElement).style.backgroundColor = "lightgray";
+  };
+
+  const onDragLeaveEvent = (e: React.DragEvent) => {
+    e.preventDefault();
+
+    (e.target as HTMLElement).style.backgroundColor = "white";
+  };
+
+  const onDropEvent = (e: React.DragEvent) => {
+    e.preventDefault();
+
+    const eventTarget = e.target as HTMLElement;
+    eventTarget.style.backgroundColor = "white";
+    if (dragElem.current != null) {
+      const newElem = dragElem.current.cloneNode(true);
+      eventTarget.appendChild(newElem as HTMLElement);
+    }
+  };
+
   return (
     <Wrapper>
       <UpperToolBar />
       <WorkingSpace>
         <PageViewContainer>
-          <PageView />
+          <PageView
+            onDragOverEvent={onDragOverEvent}
+            onDragLeaveEvent={onDragLeaveEvent}
+            onDropEvent={onDropEvent}
+          />
         </PageViewContainer>
-        <SideViewContainer>
+        <SideViewContainer
+          onDragStart={onDragStartEvent}
+          onDragEnd={onDragEndEvent}
+        >
           <HierarchyView />
           <EntityView />
         </SideViewContainer>

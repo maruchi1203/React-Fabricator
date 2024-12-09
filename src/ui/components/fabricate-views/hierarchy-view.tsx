@@ -1,14 +1,13 @@
 import styled from "styled-components";
 
 const Wrapper = styled.div`
-  padding: 5px;
-
   flex-grow: 1;
 
   background-color: transparent;
 `;
 
 const HierarchyTreeContainer = styled.div`
+  height: 100%;
   min-height: 200px;
 
   padding: 10px;
