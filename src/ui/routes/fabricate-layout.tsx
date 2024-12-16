@@ -59,16 +59,19 @@ const SideViewContainer = styled.div`
 `;
 
 export default function FabricateLayout() {
-  const dragElem = useRef<HTMLElement | null>(null);
+  const selectedElem = useRef<HTMLElement | null>(null);
+  let dragStartPosX: number = 0;
+  let dragStartPosY: number = 0;
 
   const onDragStartEvent = (e: React.DragEvent) => {
-    dragElem.current = e.target as HTMLElement;
-    console.log(dragElem.current);
+    selectedElem.current = e.target as HTMLElement;
+    dragStartPosX = e.clientX - selectedElem.current.offsetLeft;
+    dragStartPosY = e.clientY - selectedElem.current.offsetTop;
   };
 
   const onDragEndEvent = (e: React.DragEvent) => {
     e.preventDefault();
-    dragElem.current = null;
+    selectedElem.current = null;
   };
 
   const onDragOverEvent = (e: React.DragEvent) => {
@@ -88,9 +91,17 @@ export default function FabricateLayout() {
 
     const eventTarget = e.target as HTMLElement;
     eventTarget.style.backgroundColor = "white";
-    if (dragElem.current != null) {
-      const newElem = dragElem.current.cloneNode(true);
-      eventTarget.appendChild(newElem as HTMLElement);
+    if (selectedElem.current != null) {
+      const newElem = selectedElem.current.cloneNode(true) as HTMLElement;
+      eventTarget.appendChild(newElem);
+
+      newElem.style.position = "absolute";
+      newElem.style.left = `${
+        e.clientX - eventTarget.offsetLeft - dragStartPosX
+      }px`;
+      newElem.style.top = `${
+        e.clientY - eventTarget.offsetTop - dragStartPosY
+      }px`;
     }
   };
 
@@ -100,6 +111,7 @@ export default function FabricateLayout() {
       <WorkingSpace>
         <PageViewContainer>
           <PageView
+            onClick={onClickEvent}
             onDragOverEvent={onDragOverEvent}
             onDragLeaveEvent={onDragLeaveEvent}
             onDropEvent={onDropEvent}

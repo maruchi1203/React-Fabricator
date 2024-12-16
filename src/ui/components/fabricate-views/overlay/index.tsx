@@ -1,3 +1,3 @@
-import DragResizer from "./drag-resizer";
+import EntityResizer from "./entity-resizer";
 
-export default DragResizer;
+export default EntityResizer;

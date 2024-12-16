@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import EntityResizer from "../components/fabricate-views/overlay";
 
 interface EmptyTemplateProps {
   onDragOverEvent: (e: React.DragEvent) => void;
@@ -26,6 +27,8 @@ const InnerPage = styled.div`
 `;
 
 const InteractionPage = styled.div`
+  position: relative;
+
   width: 100%;
   height: 100%;
 
@@ -35,6 +38,7 @@ const InteractionPage = styled.div`
 export default function EmptyTemplate(props: EmptyTemplateProps) {
   const { onDragOverEvent, onDragLeaveEvent, onDropEvent, ...other } = props;
   const [scale, setScale] = useState(1);
+  const [dragResizerParent, set];
   const basicWidth = useRef(1200);
   const basicHeight = useRef(800);
 
@@ -68,6 +72,8 @@ export default function EmptyTemplate(props: EmptyTemplateProps) {
     innerPage.style.height = `${basicHeight.current * scale}px`;
   }, [scale]);
 
+  const onClickEvent = (e: React.MouseEvent) => {};
+
   const onWheelEvent = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.ctrlKey) {
       const updown = e.deltaY > 0 ? -1 : 1;
@@ -81,8 +87,10 @@ export default function EmptyTemplate(props: EmptyTemplateProps) {
 
   return (
     <Wrapper id="page-view" tabIndex={0} onWheel={onWheelEvent}>
-      <InnerPage id="inner-page" tabIndex={1}>
+      <InnerPage id="inner-page" tabIndex={1} onClick={onClickEvent}>
+        <EntityResizer id="drag-resizer" parent={null} hidden={true} />
         <InteractionPage
+          id="interaction-page"
           onDragOver={onDragOverEvent}
           onDragLeave={onDragLeaveEvent}
           onDrop={onDropEvent}
