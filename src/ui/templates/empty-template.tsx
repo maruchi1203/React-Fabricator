@@ -20,6 +20,7 @@ const Wrapper = styled.div`
 `;
 
 const InnerPage = styled.div`
+  position: relative;
   width: 100px;
   height: 100px;
 
@@ -36,43 +37,60 @@ const InteractionPage = styled.div`
 `;
 
 export default function EmptyTemplate(props: EmptyTemplateProps) {
-  const { onDragOverEvent, onDragLeaveEvent, onDropEvent, ...other } = props;
+  const { onDragOverEvent, onDragLeaveEvent, onDropEvent } = props;
+
+  const pageView = useRef<HTMLDivElement | null>(null);
+  const innerPage = useRef<HTMLDivElement | null>(null);
+
+  const [parent, setParent] = useState<HTMLElement | null>(null);
+
   const [scale, setScale] = useState(1);
-  const [dragResizerParent, set];
-  const basicWidth = useRef(1200);
-  const basicHeight = useRef(800);
+
+  const basicWidth = 1200;
+  const basicHeight = 800;
 
   useEffect(() => {
-    const pageView = document.getElementById("page-view") as HTMLDivElement;
-    const innerPage = document.getElementById("inner-page") as HTMLDivElement;
+    pageView.current = document.getElementById("page-view") as HTMLDivElement;
+    innerPage.current = document.getElementById("inner-page") as HTMLDivElement;
 
-    pageView.style.width = `${basicWidth.current * scale + 200}px`;
-    pageView.style.height = `${basicHeight.current * scale + 200}px`;
+    pageView.current.style.width = `${basicWidth + 200}px`;
+    pageView.current.style.height = `${basicHeight + 200}px`;
 
-    innerPage.style.width = `${basicWidth.current * scale}px`;
-    innerPage.style.height = `${basicHeight.current * scale}px`;
+    innerPage.current.style.width = `${basicWidth}px`;
+    innerPage.current.style.height = `${basicHeight}px`;
   }, []);
 
   useEffect(() => {
-    (document.getElementById("page-view") as HTMLDivElement).addEventListener(
-      "wheel",
-      (e: WheelEvent) => {
-        if (e.ctrlKey) e.preventDefault();
-      },
-      true
-    );
+    if (pageView.current && innerPage.current) {
+      pageView.current.addEventListener(
+        "wheel",
+        (e: WheelEvent) => {
+          if (e.ctrlKey) e.preventDefault();
+        },
+        true
+      );
 
-    const pageView = document.getElementById("page-view") as HTMLDivElement;
-    const innerPage = document.getElementById("inner-page") as HTMLDivElement;
+      pageView.current.style.width = `${basicWidth * scale + 200}px`;
+      pageView.current.style.height = `${basicHeight * scale + 200}px`;
 
-    pageView.style.width = `${basicWidth.current * scale + 200}px`;
-    pageView.style.height = `${basicHeight.current * scale + 200}px`;
-
-    innerPage.style.width = `${basicWidth.current * scale}px`;
-    innerPage.style.height = `${basicHeight.current * scale}px`;
+      innerPage.current.style.width = `${basicWidth * scale}px`;
+      innerPage.current.style.height = `${basicHeight * scale}px`;
+    }
   }, [scale]);
 
-  const onClickEvent = (e: React.MouseEvent) => {};
+  const onClickEvent = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    const eventTarget = e.target as HTMLElement;
+
+    if (eventTarget.classList.contains("resizable")) {
+      setParent(eventTarget);
+    } else if (eventTarget.classList.contains("tool")) {
+      setParent(parent);
+    } else {
+      setParent(null);
+    }
+  };
 
   const onWheelEvent = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.ctrlKey) {
@@ -86,11 +104,17 @@ export default function EmptyTemplate(props: EmptyTemplateProps) {
   };
 
   return (
-    <Wrapper id="page-view" tabIndex={0} onWheel={onWheelEvent}>
-      <InnerPage id="inner-page" tabIndex={1} onClick={onClickEvent}>
-        <EntityResizer id="drag-resizer" parent={null} hidden={true} />
+    <Wrapper
+      id="page-view"
+      tabIndex={0}
+      onWheel={onWheelEvent}
+      onClick={onClickEvent}
+    >
+      <InnerPage id="inner-page" tabIndex={1}>
+        <EntityResizer parent={parent} hidden={true} />
         <InteractionPage
           id="interaction-page"
+          className="resizable dropzone"
           onDragOver={onDragOverEvent}
           onDragLeave={onDragLeaveEvent}
           onDrop={onDropEvent}

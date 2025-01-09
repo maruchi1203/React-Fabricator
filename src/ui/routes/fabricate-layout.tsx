@@ -60,47 +60,60 @@ const SideViewContainer = styled.div`
 
 export default function FabricateLayout() {
   const selectedElem = useRef<HTMLElement | null>(null);
-  let dragStartPosX: number = 0;
-  let dragStartPosY: number = 0;
+  let dragStartPosX = 0,
+    dragStartPosY = 0;
 
   const onDragStartEvent = (e: React.DragEvent) => {
     selectedElem.current = e.target as HTMLElement;
+
     dragStartPosX = e.clientX - selectedElem.current.offsetLeft;
     dragStartPosY = e.clientY - selectedElem.current.offsetTop;
   };
 
   const onDragEndEvent = (e: React.DragEvent) => {
     e.preventDefault();
+
     selectedElem.current = null;
   };
 
   const onDragOverEvent = (e: React.DragEvent) => {
     e.preventDefault();
-
-    (e.target as HTMLElement).style.backgroundColor = "lightgray";
   };
 
   const onDragLeaveEvent = (e: React.DragEvent) => {
     e.preventDefault();
-
-    (e.target as HTMLElement).style.backgroundColor = "white";
   };
 
   const onDropEvent = (e: React.DragEvent) => {
-    e.preventDefault();
-
     const eventTarget = e.target as HTMLElement;
-    eventTarget.style.backgroundColor = "white";
-    if (selectedElem.current != null) {
+
+    const pageViewController = document.getElementById(
+      "page-view-container"
+    ) as HTMLElement;
+    const innerPage = document.getElementById("inner-page") as HTMLElement;
+
+    if (
+      selectedElem.current != null &&
+      eventTarget.classList.contains("dropzone")
+    ) {
       const newElem = selectedElem.current.cloneNode(true) as HTMLElement;
+      newElem.removeAttribute("draggable");
       eventTarget.appendChild(newElem);
 
       newElem.style.position = "absolute";
+
       newElem.style.left = `${
-        e.clientX - eventTarget.offsetLeft - dragStartPosX
+        e.clientX +
+        pageViewController.scrollLeft -
+        innerPage.offsetLeft -
+        dragStartPosX
       }px`;
+
       newElem.style.top = `${
-        e.clientY - eventTarget.offsetTop - dragStartPosY
+        e.clientY +
+        pageViewController.scrollTop -
+        innerPage.offsetTop -
+        dragStartPosY
       }px`;
     }
   };
@@ -109,9 +122,8 @@ export default function FabricateLayout() {
     <Wrapper>
       <UpperToolBar />
       <WorkingSpace>
-        <PageViewContainer>
+        <PageViewContainer id="page-view-container">
           <PageView
-            onClick={onClickEvent}
             onDragOverEvent={onDragOverEvent}
             onDragLeaveEvent={onDragLeaveEvent}
             onDropEvent={onDropEvent}

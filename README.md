@@ -48,3 +48,7 @@ export default tseslint.config({
   },
 })
 ```
+
+2024-12-17
+[NodeJs] npm install 사용 후 error 3221225477 발생 시
+OneDrive 내부가 아닌 다른 폴더에 프로젝트를 배치할 것

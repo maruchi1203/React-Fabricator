@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import Panel from "./entity/entity-panel";
+import Button from "./entity/entity-button";
 
 const Wrapper = styled.div`
   flex-grow: 1;
@@ -30,6 +31,7 @@ const Entity = styled.div`
 
   background-color: gray;
   border: 1px solid black;
+  gap: 10px;
 `;
 
 export default function EntityView() {
@@ -37,28 +39,12 @@ export default function EntityView() {
     <Wrapper>
       <EntityContainer>
         <Entity>
-          <Panel name="panel" />
-          <span>panel</span>
+          <Panel />
+          <span>Panel</span>
         </Entity>
         <Entity>
-          <Panel name="panel" />
-          <span>panel</span>
-        </Entity>
-        <Entity>
-          <Panel name="panel" />
-          <span>panel</span>
-        </Entity>
-        <Entity>
-          <Panel name="panel" />
-          <span>panel</span>
-        </Entity>
-        <Entity>
-          <Panel name="panel" />
-          <span>panel</span>
-        </Entity>
-        <Entity>
-          <Panel name="panel" />
-          <span>panel</span>
+          <Button />
+          <span>Button</span>
         </Entity>
       </EntityContainer>
     </Wrapper>
