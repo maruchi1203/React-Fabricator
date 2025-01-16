@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import EntityInfoDTO from "../info/entity-info-dto";
 
 const PanelWrapper = styled.div`
   position: relative;
@@ -11,6 +12,8 @@ const PanelWrapper = styled.div`
 `;
 
 export default function Panel() {
+  const entityInfo: EntityInfoDTO = new EntityInfoDTO({});
+
   return (
     <PanelWrapper
       id="panel"

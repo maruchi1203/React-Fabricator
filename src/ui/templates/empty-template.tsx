@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import EntityResizer from "../components/fabricate-views/overlay";
+import GlobalOptionDTO from "../components/fabricate-views/info/global-option-dto";
 
 interface EmptyTemplateProps {
+  globalOption: GlobalOptionDTO;
   onDragOverEvent: (e: React.DragEvent) => void;
   onDragLeaveEvent: (e: React.DragEvent) => void;
   onDropEvent: (e: React.DragEvent) => void;
@@ -37,7 +39,8 @@ const InteractionPage = styled.div`
 `;
 
 export default function EmptyTemplate(props: EmptyTemplateProps) {
-  const { onDragOverEvent, onDragLeaveEvent, onDropEvent } = props;
+  const { globalOption, onDragOverEvent, onDragLeaveEvent, onDropEvent } =
+    props;
 
   const pageView = useRef<HTMLDivElement | null>(null);
   const innerPage = useRef<HTMLDivElement | null>(null);
@@ -78,7 +81,18 @@ export default function EmptyTemplate(props: EmptyTemplateProps) {
     }
   }, [scale]);
 
-  const onClickEvent = (e: React.MouseEvent) => {
+  const resizePageView = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey) {
+      const updown = e.deltaY > 0 ? -1 : 1;
+      const deltaValue = Number.parseFloat((scale + 0.1 * updown).toFixed(1));
+
+      if (0.1 <= deltaValue && deltaValue <= 2) {
+        setScale(deltaValue);
+      }
+    }
+  };
+
+  const handleParentBySelectedElement = (e: React.MouseEvent) => {
     e.preventDefault();
 
     const eventTarget = e.target as HTMLElement;
@@ -92,26 +106,19 @@ export default function EmptyTemplate(props: EmptyTemplateProps) {
     }
   };
 
-  const onWheelEvent = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (e.ctrlKey) {
-      const updown = e.deltaY > 0 ? -1 : 1;
-      const deltaValue = Number.parseFloat((scale + 0.1 * updown).toFixed(1));
-
-      if (0.1 <= deltaValue && deltaValue <= 2) {
-        setScale(deltaValue);
-      }
-    }
-  };
-
   return (
     <Wrapper
       id="page-view"
       tabIndex={0}
-      onWheel={onWheelEvent}
-      onClick={onClickEvent}
+      onWheel={resizePageView}
+      onClick={handleParentBySelectedElement}
     >
       <InnerPage id="inner-page" tabIndex={1}>
-        <EntityResizer parent={parent} hidden={true} />
+        <EntityResizer
+          globalOption={globalOption}
+          parent={parent}
+          hidden={true}
+        />
         <InteractionPage
           id="interaction-page"
           className="resizable dropzone"

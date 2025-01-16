@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import CustumButton from "../components/general/util";
 import NavigationMenu from "../components/general/navigation-menu";
 
 const Wrapper = styled.div`
@@ -26,7 +25,7 @@ export default function HomeLayout() {
     <Wrapper>
       <NavigationMenu />
       <ContentContainer>
-        <CustumButton url="/fabricate">Create Page With Us</CustumButton>
+        <CustomButton url="/fabricate">Create Page With Us</CustomButton>
       </ContentContainer>
     </Wrapper>
   );

@@ -13,10 +13,8 @@ const ButtonWrapper = styled.button`
 
 export default function Button() {
   return (
-    <ButtonWrapper
-      id="button"
-      className="resizable"
-      draggable="true"
-    ></ButtonWrapper>
+    <ButtonWrapper id="button" className="resizable" draggable="true">
+      Button
+    </ButtonWrapper>
   );
 }

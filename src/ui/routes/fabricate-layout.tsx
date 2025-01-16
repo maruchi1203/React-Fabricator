@@ -4,6 +4,7 @@ import PageView from "../components/fabricate-views/page-view";
 import HierarchyView from "../components/fabricate-views/hierarchy-view";
 import EntityView from "../components/fabricate-views/entity-view";
 import React, { useRef } from "react";
+import GlobalOptionDTO from "../components/fabricate-views/info/global-option-dto";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -59,23 +60,13 @@ const SideViewContainer = styled.div`
 `;
 
 export default function FabricateLayout() {
-  const selectedElem = useRef<HTMLElement | null>(null);
-  let dragStartPosX = 0,
-    dragStartPosY = 0;
+  const globalOption: GlobalOptionDTO = new GlobalOptionDTO({ SnapGrid: "10" });
+  const selectedElement = useRef<HTMLElement | null>(null);
 
-  const onDragStartEvent = (e: React.DragEvent) => {
-    selectedElem.current = e.target as HTMLElement;
+  let dragStartPosX = 0;
+  let dragStartPosY = 0;
 
-    dragStartPosX = e.clientX - selectedElem.current.offsetLeft;
-    dragStartPosY = e.clientY - selectedElem.current.offsetTop;
-  };
-
-  const onDragEndEvent = (e: React.DragEvent) => {
-    e.preventDefault();
-
-    selectedElem.current = null;
-  };
-
+  // #region PageView
   const onDragOverEvent = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -93,11 +84,11 @@ export default function FabricateLayout() {
     const innerPage = document.getElementById("inner-page") as HTMLElement;
 
     if (
-      selectedElem.current != null &&
+      selectedElement.current != null &&
       eventTarget.classList.contains("dropzone")
     ) {
-      const newElem = selectedElem.current.cloneNode(true) as HTMLElement;
-      newElem.removeAttribute("draggable");
+      const newElem = selectedElement.current.cloneNode(true) as HTMLElement;
+      newElem.setAttribute("draggable", "false");
       eventTarget.appendChild(newElem);
 
       newElem.style.position = "absolute";
@@ -117,16 +108,33 @@ export default function FabricateLayout() {
       }px`;
     }
   };
+  // #endregion PageView
+
+  // #region SideViewContainer
+  const onDragStartEvent = (e: React.DragEvent) => {
+    selectedElement.current = e.target as HTMLElement;
+
+    dragStartPosX = e.clientX - selectedElement.current.offsetLeft;
+    dragStartPosY = e.clientY - selectedElement.current.offsetTop;
+  };
+
+  const onDragEndEvent = (e: React.DragEvent) => {
+    e.preventDefault();
+
+    selectedElement.current = null;
+  };
+  // #endregion SideViewContainer
 
   return (
     <Wrapper>
-      <UpperToolBar />
+      <UpperToolBar></UpperToolBar>
       <WorkingSpace>
         <PageViewContainer id="page-view-container">
           <PageView
             onDragOverEvent={onDragOverEvent}
             onDragLeaveEvent={onDragLeaveEvent}
             onDropEvent={onDropEvent}
+            globalOption={globalOption}
           />
         </PageViewContainer>
         <SideViewContainer
