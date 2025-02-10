@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import HomeLayout from "./ui/routes/home-layout";
-import FabricateLayout from "./ui/routes/fabricate-layout";
+import HomePage from "./routes/home-page";
+import FabricatePage from "./routes/fabricate-page";
 import styled, { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
@@ -29,11 +29,11 @@ const GlobalStyles = createGlobalStyle`
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomeLayout />,
+    element: <HomePage />,
   },
   {
     path: "/fabricate",
-    element: <FabricateLayout />,
+    element: <FabricatePage />,
   },
 ]);
 

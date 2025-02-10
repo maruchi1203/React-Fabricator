@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import NavigationMenu from "../components/general/navigation-menu";
+import NavigationMenu from "../home-page/navigation-menu";
+import { CustomButton } from "../general/component";
 
 const Wrapper = styled.div`
   width: 100%;
@@ -20,7 +21,7 @@ const ContentContainer = styled.div`
   background-color: gray;
 `;
 
-export default function HomeLayout() {
+export default function HomePage() {
   return (
     <Wrapper>
       <NavigationMenu />

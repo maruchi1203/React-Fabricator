@@ -9,6 +9,6 @@ const Wrapper = styled.div`
   background-color: white;
 `;
 
-export default function ToolBar() {
+export default function ToolBarLayout() {
   return <Wrapper></Wrapper>;
 }

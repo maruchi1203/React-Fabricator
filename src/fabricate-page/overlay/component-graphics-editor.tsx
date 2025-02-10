@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
+import FabricateManager from "../fabricate-manager";
 
 interface EntityResizerProps {
-  parent: HTMLElement | null;
+  fabricateManager: FabricateManager;
   [x: string]: unknown;
 }
 
+// #region styled
 const Wrapper = styled.div`
   position: absolute;
   z-index: 100;
@@ -46,28 +48,31 @@ const RelocatePoint = styled.div`
   background-color: white;
   z-index: 103;
 `;
+// #endregion styled
 
-export default function EntityResizer(props: EntityResizerProps) {
-  const { parent } = props;
+export default function ComponentGraphicsEditor(props: EntityResizerProps) {
+  const { fabricateManager } = props;
 
-  const entityResizer = useRef<HTMLElement | null>(null);
+  const componentGraphicsEditor = useRef<HTMLElement | null>(null);
   const borderLine = useRef<HTMLDivElement | null>(null);
-  const pointList: React.MutableRefObject<HTMLDivElement[]> = useRef([]);
+  const pointList = useRef<HTMLDivElement[]>([]);
+  const selectElem = document.getElementById(
+    fabricateManager.getSelectedNodeKey()
+  );
 
-  let eventTarget: HTMLDivElement | null = null;
+  let eventTarget: HTMLElement | null = null;
   let trgtId = "-1";
 
-  let dragPosX = 0;
-  let dragPosY = 0;
-  let dragPosW = 0;
-  let dragPosH = 0;
+  let dragPosX = 0,
+    dragPosY = 0,
+    dragPosW = 0,
+    dragPosH = 0;
+  const pointPosAdjustPixel = 2;
 
-  let pointPosAdjustPixel = 0;
-
-  // When Loaded
+  // #region useEffect
   useEffect(() => {
-    entityResizer.current = document.getElementById(
-      "entity-resizer"
+    componentGraphicsEditor.current = document.getElementById(
+      "component-graphics-editor"
     ) as HTMLDivElement;
 
     borderLine.current = document.getElementById(
@@ -84,29 +89,15 @@ export default function EntityResizer(props: EntityResizerProps) {
       }
     }
   }, []);
-
-  // When Parent Changed
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    pointPosAdjustPixel = pointList.current[0].clientWidth / 2;
-    setPositionOfEntityResizer();
-  }, [parent]);
+  // #endregion useEffect
 
   // #region Initialize
   const setPositionOfEntityResizer = () => {
-    if (parent && entityResizer.current) {
-      entityResizer.current.style.left = `${
-        parent.offsetLeft - pointPosAdjustPixel
-      }px`;
-      entityResizer.current.style.top = `${
-        parent.offsetTop - pointPosAdjustPixel
-      }px`;
-      entityResizer.current.style.width = `${
-        parent.offsetWidth + pointPosAdjustPixel * 2
-      }px`;
-      entityResizer.current.style.height = `${
-        parent.offsetHeight + pointPosAdjustPixel * 2
-      }px`;
+    if (selectElem && componentGraphicsEditor.current) {
+      componentGraphicsEditor.current.style.left = `${selectElem.offsetLeft}px`;
+      componentGraphicsEditor.current.style.top = `${selectElem.offsetTop}px`;
+      componentGraphicsEditor.current.style.width = `${selectElem.offsetWidth}px`;
+      componentGraphicsEditor.current.style.height = `${selectElem.offsetHeight}px`;
 
       setPositionOfBorderLine();
       setPositionOfBorderPoint();
@@ -114,26 +105,21 @@ export default function EntityResizer(props: EntityResizerProps) {
   };
 
   const setPositionOfBorderLine = () => {
-    if (parent && borderLine.current) {
-      borderLine.current.style.left = `${pointPosAdjustPixel}px`;
-      borderLine.current.style.top = `${pointPosAdjustPixel}px`;
-      borderLine.current.style.width = `${parent.offsetWidth}px`;
-      borderLine.current.style.height = `${parent.offsetHeight}px`;
+    if (selectElem && borderLine.current) {
+      borderLine.current.style.left = `0px`;
+      borderLine.current.style.top = `0px`;
+      borderLine.current.style.width = `${selectElem.offsetWidth}px`;
+      borderLine.current.style.height = `${selectElem.offsetHeight}px`;
     }
   };
 
   const setPositionOfBorderPoint = () => {
-    if (parent) {
-      const posAxisX = [
-        0,
-        (parent?.offsetWidth - pointPosAdjustPixel) / 2,
-        parent?.offsetWidth - pointPosAdjustPixel,
-      ];
-
+    if (selectElem) {
+      const posAxisX = [0, selectElem.offsetWidth / 2, selectElem.offsetWidth];
       const posAxisY = [
         0,
-        (parent?.offsetHeight - pointPosAdjustPixel) / 2,
-        parent?.offsetHeight - pointPosAdjustPixel,
+        selectElem.offsetHeight / 2,
+        selectElem.offsetHeight,
       ];
 
       for (let idx = 0; idx < pointList.current.length; idx++) {
@@ -150,9 +136,10 @@ export default function EntityResizer(props: EntityResizerProps) {
 
   // #region ResizePoint
   const resizePointOnMouseDownEvent = (e: React.MouseEvent) => {
-    if (parent) {
+    if (selectElem) {
       eventTarget = e.target as HTMLDivElement;
       trgtId = eventTarget.id[eventTarget.id.length - 1];
+      eventTarget.style.cursor = "none";
 
       document.addEventListener("mousemove", resizePointOnMouseMoveEvent);
       document.addEventListener("mouseup", resizePointOnMouseUpEvent);
@@ -160,41 +147,39 @@ export default function EntityResizer(props: EntityResizerProps) {
   };
 
   const resizePointOnMouseMoveEvent = (e: MouseEvent) => {
-    if (parent && entityResizer.current) {
+    if (selectElem && componentGraphicsEditor.current) {
       if (!["3", "5"].includes(trgtId)) {
         if (["0", "1", "2"].includes(trgtId)) {
-          dragPosY = parent.offsetTop + e.movementY;
-          dragPosH = parent.offsetHeight - e.movementY;
+          dragPosY = selectElem.offsetTop + e.movementY;
+          dragPosH = selectElem.offsetHeight - e.movementY;
         } else if (["6", "7", "8"].includes(trgtId)) {
-          dragPosY = parent.offsetTop;
-          dragPosH = parent.offsetHeight + e.movementY;
+          dragPosY = selectElem.offsetTop;
+          dragPosH = selectElem.offsetHeight + e.movementY;
         }
 
-        parent.style.top = `${dragPosY}px`;
-        parent.style.height = `${dragPosH}px`;
+        selectElem.style.top = `${dragPosY}px`;
+        selectElem.style.height = `${dragPosH}px`;
 
-        entityResizer.current.style.top = `${dragPosY - pointPosAdjustPixel}px`;
-        entityResizer.current.style.height = `${
-          dragPosH - pointPosAdjustPixel
-        }px`;
+        componentGraphicsEditor.current.style.top = `${dragPosY}px`;
+        componentGraphicsEditor.current.style.height = `${dragPosH}px`;
       }
 
       if (!["1", "7"].includes(trgtId)) {
         if (["0", "3", "6"].includes(trgtId)) {
-          dragPosX = parent.offsetLeft + e.movementX;
-          dragPosW = parent.offsetWidth - e.movementX;
+          dragPosX = selectElem.offsetLeft + e.movementX;
+          dragPosW = selectElem.offsetWidth - e.movementX;
         } else if (["2", "5", "8"].includes(trgtId)) {
-          dragPosX = parent.offsetLeft;
-          dragPosW = parent.offsetWidth + e.movementX;
+          dragPosX = selectElem.offsetLeft;
+          dragPosW = selectElem.offsetWidth + e.movementX;
         }
 
-        parent.style.left = `${dragPosX}px`;
-        parent.style.width = `${dragPosW}px`;
+        selectElem.style.left = `${dragPosX}px`;
+        selectElem.style.width = `${dragPosW}px`;
 
-        entityResizer.current.style.left = `${
+        componentGraphicsEditor.current.style.left = `${
           dragPosX - pointPosAdjustPixel
         }px`;
-        entityResizer.current.style.width = `${
+        componentGraphicsEditor.current.style.width = `${
           dragPosW - pointPosAdjustPixel
         }px`;
       }
@@ -206,6 +191,9 @@ export default function EntityResizer(props: EntityResizerProps) {
   const resizePointOnMouseUpEvent = (e: MouseEvent) => {
     e.preventDefault();
 
+    eventTarget = e.target as HTMLElement;
+    eventTarget.style.cursor = "default";
+
     document.removeEventListener("mousemove", resizePointOnMouseMoveEvent);
     document.removeEventListener("mouseup", resizePointOnMouseUpEvent);
   };
@@ -214,7 +202,10 @@ export default function EntityResizer(props: EntityResizerProps) {
   // #region RelocatePoint
   const relocatePointOnMouseDownEvent = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (parent) {
+    eventTarget = e.target as HTMLElement;
+    eventTarget.style.cursor = "none";
+
+    if (selectElem) {
       document.addEventListener("mousemove", relocatePointOnMouseMoveEvent);
       document.addEventListener("mouseup", relocatePointOnMouseUpEvent);
     }
@@ -223,78 +214,79 @@ export default function EntityResizer(props: EntityResizerProps) {
   const relocatePointOnMouseMoveEvent = (e: MouseEvent) => {
     e.preventDefault();
 
-    if (parent && entityResizer.current) {
-      dragPosX = parent.offsetLeft + e.movementX;
-      dragPosY = parent.offsetTop + e.movementY;
+    if (selectElem && componentGraphicsEditor.current) {
+      dragPosX = selectElem.offsetLeft + e.movementX;
+      dragPosY = selectElem.offsetTop + e.movementY;
 
-      parent.style.left = `${dragPosX}px`;
-      parent.style.top = `${dragPosY}px`;
+      selectElem.style.left = `${dragPosX}px`;
+      selectElem.style.top = `${dragPosY}px`;
 
-      entityResizer.current.style.left = `${
-        parent.offsetLeft - pointPosAdjustPixel
+      componentGraphicsEditor.current.style.left = `${
+        selectElem.offsetLeft - pointPosAdjustPixel
       }px`;
-      entityResizer.current.style.top = `${
-        parent.offsetTop - pointPosAdjustPixel
+      componentGraphicsEditor.current.style.top = `${
+        selectElem.offsetTop - pointPosAdjustPixel
       }px`;
     }
   };
 
   const relocatePointOnMouseUpEvent = (e: MouseEvent) => {
     e.preventDefault();
+    eventTarget = e.target as HTMLElement;
+    eventTarget.style.cursor = "default";
 
     document.removeEventListener("mousemove", relocatePointOnMouseMoveEvent);
     document.removeEventListener("mouseup", relocatePointOnMouseUpEvent);
   };
   // #endregion RelocatePoint
 
-  const SnapToGrid = () => {};
-
   return (
-    <Wrapper id="entity-resizer" hidden={parent ? false : true}>
+    <Wrapper id="component-graphics-editor" hidden={selectElem ? false : true}>
+      {/* <ComponentInfoBox compInfo={selectElem} /> */}
       <BorderLine id="border-line" />
       <ResizePoint
         id="point0"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point1"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point2"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point3"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <RelocatePoint
         id="point4"
-        className="tool"
+        className="fix-select"
         onMouseDown={relocatePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point5"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point6"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point7"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
         id="point8"
-        className="tool"
+        className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
     </Wrapper>

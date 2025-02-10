@@ -17,7 +17,7 @@ const HierarchyTreeContainer = styled.div`
   border-radius: 10px;
 `;
 
-export default function HierarchyView() {
+export default function HierarchyLayout() {
   return (
     <Wrapper>
       <HierarchyTreeContainer></HierarchyTreeContainer>

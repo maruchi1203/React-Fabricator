@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 type ButtonProps = {
   children: string | null;
+  url: string;
   [x: string]: unknown;
 };
 
@@ -23,11 +24,11 @@ const Button = styled.button`
 `;
 
 export default function CustumButton(props: ButtonProps) {
-  const { children, ...other } = props;
+  const { children, url, ...other } = props;
   const navigate = useNavigate();
 
   function OnButtonClicked() {
-    navigate(other["url"] as string);
+    navigate(url);
   }
 
   return (

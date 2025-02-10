@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import Panel from "./entity/entity-panel";
-import Button from "./entity/entity-button";
+import Panel from "../component/component-panel";
+import Button from "../component/component-button";
 
 const Wrapper = styled.div`
   flex-grow: 1;
@@ -8,7 +8,7 @@ const Wrapper = styled.div`
   background-color: transparent;
 `;
 
-const EntityContainer = styled.div`
+const ComponentShelf = styled.div`
   height: 100%;
   min-height: 200px;
 
@@ -23,7 +23,7 @@ const EntityContainer = styled.div`
   border-radius: 10px;
 `;
 
-const Entity = styled.div`
+const ComponentBox = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,19 +34,25 @@ const Entity = styled.div`
   gap: 10px;
 `;
 
-export default function EntityView() {
+export default function ComponentLayout() {
   return (
     <Wrapper>
-      <EntityContainer>
-        <Entity>
-          <Panel />
+      <ComponentShelf>
+        <ComponentBox>
+          <Panel
+            compKey={"panel"}
+            style={{}}
+            onDropEvent={(e: React.DragEvent) => {
+              e.preventDefault();
+            }}
+          />
           <span>Panel</span>
-        </Entity>
-        <Entity>
-          <Button />
+        </ComponentBox>
+        <ComponentBox>
+          <Button compKey={"button"} style={{}} />
           <span>Button</span>
-        </Entity>
-      </EntityContainer>
+        </ComponentBox>
+      </ComponentShelf>
     </Wrapper>
   );
 }
