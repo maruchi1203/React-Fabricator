@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ComponentLayout,
   HierarchyLayout,
@@ -10,7 +10,7 @@ import { createRoot, Root } from "react-dom/client";
 import { Button, Panel } from "../fabricate-page/component";
 import ComponentTreeNode from "../fabricate-page/info/component-tree-node";
 import { getRandomKey } from "../general/util";
-import FabricateManager from "../fabricate-page/fabricate-manager";
+import Fabricatemanager from "../fabricate-page/fabricate-manager";
 
 // #region styled
 const Wrapper = styled.div`
@@ -68,23 +68,29 @@ const SideViewContainer = styled.div`
 // #endregion styled
 
 export default function FabricatePage() {
-  const manager = new FabricateManager();
-  const nodeList: ComponentTreeNode[] = manager.nodeList;
+  const manager = useRef<Fabricatemanager>(new Fabricatemanager());
+  const nodeList: ComponentTreeNode[] = manager.current.nodeList;
   const dragElem = useRef<HTMLElement | null>(null);
+  const viewport = useRef<HTMLElement | null>(null);
   const interactionSpace = useRef<Root | null>(null);
 
-  let dragStartPosX = 0,
-    dragStartPosY = 0;
+  const [selectedNode, setSelectedNode] = useState<ComponentTreeNode | null>(
+    null
+  );
+
+  let dragStartPosX = 0;
+  let dragStartPosY = 0;
 
   // #region useEffect
   useEffect(() => {
+    viewport.current = document.getElementById("main-view-container");
     const elem = document.getElementById("interaction-space");
     if (elem && !interactionSpace.current) {
       interactionSpace.current = createRoot(elem);
       const node = new ComponentTreeNode("interaction-space", null, [], {
         type: Panel,
         props: {
-          style: { width: "1200px", height: "800px" },
+          style: { left: "0px", top: "0px", width: "1200px", height: "800px" },
         },
       });
       nodeList.push(node);
@@ -97,20 +103,35 @@ export default function FabricatePage() {
     e.preventDefault();
     e.stopPropagation();
 
+    console.log(dragElem.current);
+
     const key = getRandomKey(10);
     const eventTarget = e.target as HTMLElement;
-    const parentNode = manager.getNodeByKey(eventTarget.id);
+    const parentNode = manager.current.getNodeByKey(eventTarget.id);
     let newReactElem;
 
-    console.log(e.clientX, dragStartPosX, e.clientY, dragStartPosY);
-    console.log(e.target);
-
     if (dragElem.current && eventTarget.classList.contains("dropzone")) {
-      const newElemStyle = {
-        position: "absolute",
-        left: `${e.clientX - dragStartPosX}px`,
-        top: `${e.clientY - dragStartPosY}px`,
-      };
+      let newElemStyle = null;
+
+      if (viewport.current) {
+        newElemStyle = {
+          position: "absolute",
+          left: `${
+            e.clientX +
+            viewport.current.scrollLeft -
+            dragStartPosX -
+            eventTarget.offsetLeft
+          }px`,
+          top: `${
+            e.clientY +
+            viewport.current.scrollTop -
+            dragStartPosY -
+            eventTarget.offsetTop
+          }px`,
+          width: `${dragElem.current.offsetWidth}px`,
+          height: `${dragElem.current.offsetHeight}px`,
+        };
+      }
 
       if (dragElem.current.classList.contains("panel") && eventTarget.id) {
         newReactElem = new ComponentTreeNode(key, parentNode, [], {
@@ -155,15 +176,26 @@ export default function FabricatePage() {
     e.preventDefault();
   };
 
-  const OnClickEvent = (e: React.MouseEvent) => {
-    manager.setSelectedNode(manager.getNodeByKey((e.target as HTMLElement).id));
+  const SetSelectedElem = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    const exceptList = ["viewport-layout", "component-graphics-editor"];
+
+    if (exceptList.includes((e.target as HTMLElement).id)) {
+      setSelectedNode(null);
+    } else if ((e.target as HTMLElement).classList.contains("fix-select")) {
+      return;
+    } else {
+      setSelectedNode(
+        manager.current.getNodeByKey((e.target as HTMLElement).id)
+      );
+    }
   };
   // #endregion ViewportLayout
 
   // #region SideViewContainer
   const dragStartForPlaceComponent = (e: React.DragEvent) => {
     dragElem.current = e.target as HTMLElement;
-
     dragStartPosX = e.clientX - dragElem.current.offsetLeft;
     dragStartPosY = e.clientY - dragElem.current.offsetTop;
   };
@@ -176,10 +208,11 @@ export default function FabricatePage() {
   return (
     <Wrapper>
       <ToolBarLayout></ToolBarLayout>
-      <WorkingSpace onClick={OnClickEvent}>
+      <WorkingSpace onClick={SetSelectedElem}>
         <MainViewContainer id="main-view-container">
           <ViewportLayout
-            manager={manager}
+            manager={manager.current}
+            selectedNode={selectedNode}
             onDropEvent={placeComponentOnInteractionSpace}
             onDragOverEvent={OnDragOverEvent}
             onDragLeaveEvent={OnDragLeaveEvent}

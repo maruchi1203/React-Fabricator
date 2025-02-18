@@ -7,6 +7,7 @@ import FabricateManager from "../fabricate-manager";
 
 interface ViewportLayoutProps {
   manager: FabricateManager;
+  selectedNode: ComponentTreeNode | null;
   onDropEvent: (e: React.DragEvent) => void;
   onDragOverEvent: (e: React.DragEvent) => void;
   onDragLeaveEvent: (e: React.DragEvent) => void;
@@ -15,8 +16,6 @@ interface ViewportLayoutProps {
 
 // #region styled
 const Wrapper = styled.div`
-  width: 100px;
-  height: 100px;
   min-width: 100%;
   min-height: 100%;
 
@@ -25,9 +24,6 @@ const Wrapper = styled.div`
 `;
 
 const Viewport = styled.div`
-  width: 100px;
-  height: 100px;
-
   background-color: black;
 `;
 
@@ -52,7 +48,13 @@ const InteractionSpace = styled.div`
 // #endregion styled
 
 export default function ViewportLayout(props: ViewportLayoutProps) {
-  const { manager, onDropEvent, onDragOverEvent, onDragLeaveEvent } = props;
+  const {
+    manager,
+    selectedNode,
+    onDropEvent,
+    onDragOverEvent,
+    onDragLeaveEvent,
+  } = props;
 
   const rootNode = useRef<ComponentTreeNode>();
   const viewportLayout = useRef<HTMLDivElement | null>(null);
@@ -118,8 +120,8 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
   return (
     <Wrapper id="viewport-layout" tabIndex={0} onWheel={resizeViewport}>
       <Viewport id="viewport" tabIndex={1}>
-        {manager.getSelectedNode() ? (
-          <ComponentGraphicsEditor fabricateManager={manager} />
+        {selectedNode ? (
+          <ComponentGraphicsEditor selectedNode={selectedNode} />
         ) : null}
         <InteractionSpace
           id="interaction-space"

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
-import FabricateManager from "../fabricate-manager";
+import ComponentTreeNode from "../info/component-tree-node";
+import { convertStyleOptionToNum } from "../../general/util";
 
 interface EntityResizerProps {
-  fabricateManager: FabricateManager;
+  selectedNode: ComponentTreeNode;
   [x: string]: unknown;
 }
 
@@ -51,22 +52,20 @@ const RelocatePoint = styled.div`
 // #endregion styled
 
 export default function ComponentGraphicsEditor(props: EntityResizerProps) {
-  const { fabricateManager } = props;
+  const { selectedNode } = props;
 
+  const selectedElem = useRef<HTMLElement | null>(null);
   const componentGraphicsEditor = useRef<HTMLElement | null>(null);
   const borderLine = useRef<HTMLDivElement | null>(null);
   const pointList = useRef<HTMLDivElement[]>([]);
-  const selectElem = document.getElementById(
-    fabricateManager.getSelectedNodeKey()
-  );
 
   let eventTarget: HTMLElement | null = null;
   let trgtId = "-1";
 
-  let dragPosX = 0,
-    dragPosY = 0,
-    dragPosW = 0,
-    dragPosH = 0;
+  let dragPosX = 0;
+  let dragPosY = 0;
+  let dragPosW = 0;
+  let dragPosH = 0;
   const pointPosAdjustPixel = 2;
 
   // #region useEffect
@@ -89,15 +88,30 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
       }
     }
   }, []);
+
+  useEffect(() => {
+    selectedElem.current = document.getElementById(
+      selectedNode.getKey()
+    ) as HTMLElement;
+
+    setPositionOfEntityResizer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode]);
   // #endregion useEffect
 
   // #region Initialize
   const setPositionOfEntityResizer = () => {
-    if (selectElem && componentGraphicsEditor.current) {
-      componentGraphicsEditor.current.style.left = `${selectElem.offsetLeft}px`;
-      componentGraphicsEditor.current.style.top = `${selectElem.offsetTop}px`;
-      componentGraphicsEditor.current.style.width = `${selectElem.offsetWidth}px`;
-      componentGraphicsEditor.current.style.height = `${selectElem.offsetHeight}px`;
+    if (selectedElem.current && componentGraphicsEditor.current) {
+      componentGraphicsEditor.current.style.left = `${
+        convertStyleOptionToNum(selectedElem.current.style.left) + 100
+      }px`;
+      componentGraphicsEditor.current.style.top = `${
+        convertStyleOptionToNum(selectedElem.current.style.top) + 100
+      }px`;
+      componentGraphicsEditor.current.style.width =
+        selectedElem.current.style.width;
+      componentGraphicsEditor.current.style.height =
+        selectedElem.current.style.height;
 
       setPositionOfBorderLine();
       setPositionOfBorderPoint();
@@ -105,21 +119,27 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   };
 
   const setPositionOfBorderLine = () => {
-    if (selectElem && borderLine.current) {
+    if (selectedElem.current && borderLine.current) {
       borderLine.current.style.left = `0px`;
       borderLine.current.style.top = `0px`;
-      borderLine.current.style.width = `${selectElem.offsetWidth}px`;
-      borderLine.current.style.height = `${selectElem.offsetHeight}px`;
+      borderLine.current.style.width = selectedElem.current.style.width;
+      borderLine.current.style.height = selectedElem.current.style.height;
     }
   };
 
   const setPositionOfBorderPoint = () => {
-    if (selectElem) {
-      const posAxisX = [0, selectElem.offsetWidth / 2, selectElem.offsetWidth];
+    if (selectedElem.current) {
+      const posAxisX = [
+        0 - pointPosAdjustPixel,
+        convertStyleOptionToNum(selectedElem.current.style.width) / 2,
+        convertStyleOptionToNum(selectedElem.current.style.width) +
+          pointPosAdjustPixel,
+      ];
       const posAxisY = [
-        0,
-        selectElem.offsetHeight / 2,
-        selectElem.offsetHeight,
+        0 - pointPosAdjustPixel,
+        convertStyleOptionToNum(selectedElem.current.style.height) / 2,
+        convertStyleOptionToNum(selectedElem.current.style.height) +
+          pointPosAdjustPixel,
       ];
 
       for (let idx = 0; idx < pointList.current.length; idx++) {
@@ -136,7 +156,7 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
 
   // #region ResizePoint
   const resizePointOnMouseDownEvent = (e: React.MouseEvent) => {
-    if (selectElem) {
+    if (selectedNode) {
       eventTarget = e.target as HTMLDivElement;
       trgtId = eventTarget.id[eventTarget.id.length - 1];
       eventTarget.style.cursor = "none";
@@ -147,18 +167,26 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   };
 
   const resizePointOnMouseMoveEvent = (e: MouseEvent) => {
-    if (selectElem && componentGraphicsEditor.current) {
+    if (selectedElem.current && componentGraphicsEditor.current) {
       if (!["3", "5"].includes(trgtId)) {
         if (["0", "1", "2"].includes(trgtId)) {
-          dragPosY = selectElem.offsetTop + e.movementY;
-          dragPosH = selectElem.offsetHeight - e.movementY;
+          dragPosY =
+            convertStyleOptionToNum(selectedElem.current.style.top) +
+            e.movementY;
+          dragPosH =
+            convertStyleOptionToNum(selectedElem.current.style.height) -
+            e.movementY;
         } else if (["6", "7", "8"].includes(trgtId)) {
-          dragPosY = selectElem.offsetTop;
-          dragPosH = selectElem.offsetHeight + e.movementY;
+          dragPosY = convertStyleOptionToNum(
+            selectedNode.getStyleOption("top")
+          );
+          dragPosH =
+            convertStyleOptionToNum(selectedNode.getStyleOption("height")) +
+            e.movementY;
         }
 
-        selectElem.style.top = `${dragPosY}px`;
-        selectElem.style.height = `${dragPosH}px`;
+        selectedElem.current.style.top = `${dragPosY}px`;
+        selectedElem.current.style.height = `${dragPosH}px`;
 
         componentGraphicsEditor.current.style.top = `${dragPosY}px`;
         componentGraphicsEditor.current.style.height = `${dragPosH}px`;
@@ -166,15 +194,21 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
 
       if (!["1", "7"].includes(trgtId)) {
         if (["0", "3", "6"].includes(trgtId)) {
-          dragPosX = selectElem.offsetLeft + e.movementX;
-          dragPosW = selectElem.offsetWidth - e.movementX;
+          dragPosX =
+            convertStyleOptionToNum(selectedElem.current.style.left) +
+            e.movementX;
+          dragPosW =
+            convertStyleOptionToNum(selectedElem.current.style.width) -
+            e.movementX;
         } else if (["2", "5", "8"].includes(trgtId)) {
-          dragPosX = selectElem.offsetLeft;
-          dragPosW = selectElem.offsetWidth + e.movementX;
+          dragPosX = convertStyleOptionToNum(selectedElem.current.style.left);
+          dragPosW =
+            convertStyleOptionToNum(selectedElem.current.style.width) +
+            e.movementX;
         }
 
-        selectElem.style.left = `${dragPosX}px`;
-        selectElem.style.width = `${dragPosW}px`;
+        selectedElem.current.style.left = `${dragPosX}px`;
+        selectedElem.current.style.width = `${dragPosW}px`;
 
         componentGraphicsEditor.current.style.left = `${
           dragPosX - pointPosAdjustPixel
@@ -205,7 +239,7 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
     eventTarget = e.target as HTMLElement;
     eventTarget.style.cursor = "none";
 
-    if (selectElem) {
+    if (selectedElem.current) {
       document.addEventListener("mousemove", relocatePointOnMouseMoveEvent);
       document.addEventListener("mouseup", relocatePointOnMouseUpEvent);
     }
@@ -214,18 +248,22 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   const relocatePointOnMouseMoveEvent = (e: MouseEvent) => {
     e.preventDefault();
 
-    if (selectElem && componentGraphicsEditor.current) {
-      dragPosX = selectElem.offsetLeft + e.movementX;
-      dragPosY = selectElem.offsetTop + e.movementY;
+    if (selectedElem.current && componentGraphicsEditor.current) {
+      dragPosX =
+        convertStyleOptionToNum(selectedElem.current.style.left) + e.movementX;
+      dragPosY =
+        convertStyleOptionToNum(selectedElem.current.style.top) + e.movementY;
 
-      selectElem.style.left = `${dragPosX}px`;
-      selectElem.style.top = `${dragPosY}px`;
+      selectedElem.current.style.left = `${dragPosX}px`;
+      selectedElem.current.style.top = `${dragPosY}px`;
 
       componentGraphicsEditor.current.style.left = `${
-        selectElem.offsetLeft - pointPosAdjustPixel
+        convertStyleOptionToNum(selectedElem.current.style.left) -
+        pointPosAdjustPixel
       }px`;
       componentGraphicsEditor.current.style.top = `${
-        selectElem.offsetTop - pointPosAdjustPixel
+        convertStyleOptionToNum(selectedElem.current.style.top) -
+        pointPosAdjustPixel
       }px`;
     }
   };
@@ -241,8 +279,11 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   // #endregion RelocatePoint
 
   return (
-    <Wrapper id="component-graphics-editor" hidden={selectElem ? false : true}>
-      {/* <ComponentInfoBox compInfo={selectElem} /> */}
+    <Wrapper
+      id="component-graphics-editor"
+      hidden={selectedNode ? false : true}
+    >
+      {/* <ComponentInfoBox compInfo={selectedNode} /> */}
       <BorderLine id="border-line" />
       <ResizePoint
         id="point0"

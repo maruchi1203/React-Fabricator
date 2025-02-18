@@ -1,10 +1,11 @@
-import { createElement, FunctionComponent, ReactElement } from "react";
+import React, { createElement, FunctionComponent, ReactElement } from "react";
 
 export default class ComponentTreeNode {
   private key: string;
   private parent: ComponentTreeNode | null;
   private children: ComponentTreeNode[];
   private elementInfo: { [key: string]: unknown };
+  private element: React.ReactElement | null = null;
 
   constructor(
     key: string,
@@ -74,20 +75,20 @@ export default class ComponentTreeNode {
     }
   }
 
+  getElement() {
+    return this.element;
+  }
+
+  setElement(value: React.ReactElement) {
+    this.element = value;
+  }
+
   getStyleOption(key: string) {
     const styleOption = (
       this.elementInfo["props"] as { [key: string]: unknown }
     )["style"] as { [key: string]: string };
 
     return styleOption[key];
-  }
-
-  setStyleOption(key: string, value: string) {
-    const styleOption = (
-      this.elementInfo["props"] as { [key: string]: unknown }
-    )["style"] as { [key: string]: string };
-
-    styleOption[key] = value;
   }
 
   // return react element
@@ -104,9 +105,11 @@ export default class ComponentTreeNode {
           ...(child.elementInfo["props"] as { [key: string]: unknown }),
         } as React.Attributes,
         childTree
-      );
+      ) as React.ReactElement;
+      child.setElement(elem);
       elems.push(elem);
     }
+
     return <>{elems}</>;
   }
 }
