@@ -3,7 +3,6 @@ import styled from "styled-components";
 interface PanelProps {
   compKey: string;
   style: { [key: string]: string };
-  onDropEvent: (e: React.DragEvent) => void;
   [x: string]: unknown;
 }
 
@@ -18,7 +17,7 @@ const Wrapper = styled.div`
 `;
 
 export default function Panel(props: PanelProps) {
-  const { compKey, style, onDropEvent } = props;
+  const { compKey, style } = props;
 
   return (
     <Wrapper
@@ -27,7 +26,6 @@ export default function Panel(props: PanelProps) {
       className="component panel resizable dropzone"
       draggable="true"
       style={style}
-      onDrop={onDropEvent}
     ></Wrapper>
   );
 }

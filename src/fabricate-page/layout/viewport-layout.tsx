@@ -16,6 +16,7 @@ interface ViewportLayoutProps {
 
 // #region styled
 const Wrapper = styled.div`
+  position: relative;
   min-width: 100%;
   min-height: 100%;
 
@@ -24,14 +25,11 @@ const Wrapper = styled.div`
 `;
 
 const Viewport = styled.div`
+  position: relative;
   background-color: black;
 `;
 
 const InteractionSpace = styled.div`
-  position: relative;
-  width: 100%;
-  height: 100%;
-
   background-color: white;
 `;
 
@@ -125,6 +123,13 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
         ) : null}
         <InteractionSpace
           id="interaction-space"
+          style={{
+            position: "absolute",
+            left: "0px",
+            top: "0px",
+            width: "1200px",
+            height: "800px",
+          }}
           className="component resizable dropzone"
           onDrop={onDropEvent}
           onDragOver={onDragOverEvent}

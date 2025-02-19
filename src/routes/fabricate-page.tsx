@@ -71,6 +71,9 @@ export default function FabricatePage() {
   const manager = useRef<Fabricatemanager>(new Fabricatemanager());
   const nodeList: ComponentTreeNode[] = manager.current.nodeList;
   const dragElem = useRef<HTMLElement | null>(null);
+
+  const toolbarLayout = useRef<HTMLElement | null>(null);
+  const mainViewContainer = useRef<HTMLElement | null>(null);
   const viewport = useRef<HTMLElement | null>(null);
   const interactionSpace = useRef<Root | null>(null);
 
@@ -83,16 +86,22 @@ export default function FabricatePage() {
 
   // #region useEffect
   useEffect(() => {
-    viewport.current = document.getElementById("main-view-container");
+    toolbarLayout.current = document.getElementById("tool-bar-layout");
+    mainViewContainer.current = document.getElementById("main-view-container");
+    viewport.current = document.getElementById("viewport");
     const elem = document.getElementById("interaction-space");
+
     if (elem && !interactionSpace.current) {
       interactionSpace.current = createRoot(elem);
+
       const node = new ComponentTreeNode("interaction-space", null, [], {
         type: Panel,
         props: {
           style: { left: "0px", top: "0px", width: "1200px", height: "800px" },
+          draggable: false,
         },
       });
+
       nodeList.push(node);
     }
   }, []);
@@ -100,10 +109,7 @@ export default function FabricatePage() {
 
   // #region ViewportLayout
   function placeComponentOnInteractionSpace(e: React.DragEvent) {
-    e.preventDefault();
     e.stopPropagation();
-
-    console.log(dragElem.current);
 
     const key = getRandomKey(10);
     const eventTarget = e.target as HTMLElement;
@@ -113,23 +119,45 @@ export default function FabricatePage() {
     if (dragElem.current && eventTarget.classList.contains("dropzone")) {
       let newElemStyle = null;
 
-      if (viewport.current) {
+      if (
+        mainViewContainer.current &&
+        viewport.current &&
+        toolbarLayout.current
+      ) {
+        /**
+         * e.clientY = coordinate of new element
+         *            - viewport.current.scrollTop
+         *            + viewport.current.offsetTop
+         *            + eventTarget.offsetTop
+         *            + dragStartPosY
+         *            + toolbarLayout.current.clientHeight
+         *
+         * + viewport.current.scrollTop : Coordinate in ViewportLayout
+         * - viewport.current.offsetTop : To exclude blank area
+         * - eventTarget.offsetTop : For calculating new child element's position in eventTarget
+         * - toolbarLayout.current.clientHeight : To exclude toolbar's height
+         * - dragStartPosY : Coordinate in dragElem when drag started
+         **/
         newElemStyle = {
           position: "absolute",
           left: `${
             e.clientX +
-            viewport.current.scrollLeft -
-            dragStartPosX -
-            eventTarget.offsetLeft
+            mainViewContainer.current.scrollLeft -
+            viewport.current.offsetLeft -
+            eventTarget.offsetLeft -
+            dragStartPosX
           }px`,
           top: `${
             e.clientY +
-            viewport.current.scrollTop -
+            mainViewContainer.current.scrollTop -
+            viewport.current.offsetTop -
+            eventTarget.offsetTop -
             dragStartPosY -
-            eventTarget.offsetTop
+            toolbarLayout.current.offsetHeight
           }px`,
           width: `${dragElem.current.offsetWidth}px`,
           height: `${dragElem.current.offsetHeight}px`,
+          background: "yellow",
         };
       }
 
@@ -139,7 +167,6 @@ export default function FabricatePage() {
           props: {
             style: newElemStyle,
             draggable: false,
-            onDropEvent: placeComponentOnInteractionSpace,
           },
         });
       } else if (
@@ -207,7 +234,7 @@ export default function FabricatePage() {
 
   return (
     <Wrapper>
-      <ToolBarLayout></ToolBarLayout>
+      <ToolBarLayout id="tool-bar-layout"></ToolBarLayout>
       <WorkingSpace onClick={SetSelectedElem}>
         <MainViewContainer id="main-view-container">
           <ViewportLayout

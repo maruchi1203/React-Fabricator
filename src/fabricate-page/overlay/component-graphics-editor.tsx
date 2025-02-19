@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
 import ComponentTreeNode from "../info/component-tree-node";
-import { convertStyleOptionToNum } from "../../general/util";
 
 interface EntityResizerProps {
   selectedNode: ComponentTreeNode;
@@ -55,7 +54,10 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   const { selectedNode } = props;
 
   const selectedElem = useRef<HTMLElement | null>(null);
-  const componentGraphicsEditor = useRef<HTMLElement | null>(null);
+
+  const componentGraphicsEditor = useRef<HTMLDivElement | null>(null);
+  const viewport = useRef<HTMLDivElement | null>(null);
+
   const borderLine = useRef<HTMLDivElement | null>(null);
   const pointList = useRef<HTMLDivElement[]>([]);
 
@@ -72,6 +74,10 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   useEffect(() => {
     componentGraphicsEditor.current = document.getElementById(
       "component-graphics-editor"
+    ) as HTMLDivElement;
+
+    viewport.current = document.getElementById(
+      "main-view-container"
     ) as HTMLDivElement;
 
     borderLine.current = document.getElementById(
@@ -101,17 +107,15 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
 
   // #region Initialize
   const setPositionOfEntityResizer = () => {
-    if (selectedElem.current && componentGraphicsEditor.current) {
-      componentGraphicsEditor.current.style.left = `${
-        convertStyleOptionToNum(selectedElem.current.style.left) + 100
-      }px`;
-      componentGraphicsEditor.current.style.top = `${
-        convertStyleOptionToNum(selectedElem.current.style.top) + 100
-      }px`;
-      componentGraphicsEditor.current.style.width =
-        selectedElem.current.style.width;
-      componentGraphicsEditor.current.style.height =
-        selectedElem.current.style.height;
+    if (
+      selectedElem.current &&
+      componentGraphicsEditor.current &&
+      viewport.current
+    ) {
+      componentGraphicsEditor.current.style.left = `${selectedElem.current.offsetLeft}px`;
+      componentGraphicsEditor.current.style.top = `${selectedElem.current.offsetTop}px`;
+      componentGraphicsEditor.current.style.width = `${selectedElem.current.offsetWidth}px`;
+      componentGraphicsEditor.current.style.height = `${selectedElem.current.offsetHeight}px`;
 
       setPositionOfBorderLine();
       setPositionOfBorderPoint();
@@ -130,16 +134,14 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   const setPositionOfBorderPoint = () => {
     if (selectedElem.current) {
       const posAxisX = [
-        0 - pointPosAdjustPixel,
-        convertStyleOptionToNum(selectedElem.current.style.width) / 2,
-        convertStyleOptionToNum(selectedElem.current.style.width) +
-          pointPosAdjustPixel,
+        0,
+        selectedElem.current.offsetWidth / 2,
+        selectedElem.current.offsetWidth,
       ];
       const posAxisY = [
-        0 - pointPosAdjustPixel,
-        convertStyleOptionToNum(selectedElem.current.style.height) / 2,
-        convertStyleOptionToNum(selectedElem.current.style.height) +
-          pointPosAdjustPixel,
+        0,
+        selectedElem.current.offsetHeight / 2,
+        selectedElem.current.offsetHeight,
       ];
 
       for (let idx = 0; idx < pointList.current.length; idx++) {
@@ -167,55 +169,45 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   };
 
   const resizePointOnMouseMoveEvent = (e: MouseEvent) => {
-    if (selectedElem.current && componentGraphicsEditor.current) {
+    if (
+      selectedElem.current &&
+      componentGraphicsEditor.current &&
+      viewport.current
+    ) {
       if (!["3", "5"].includes(trgtId)) {
         if (["0", "1", "2"].includes(trgtId)) {
-          dragPosY =
-            convertStyleOptionToNum(selectedElem.current.style.top) +
-            e.movementY;
-          dragPosH =
-            convertStyleOptionToNum(selectedElem.current.style.height) -
-            e.movementY;
+          dragPosY = selectedElem.current.offsetTop + e.movementY;
+          dragPosH = selectedElem.current.offsetHeight - e.movementY;
         } else if (["6", "7", "8"].includes(trgtId)) {
-          dragPosY = convertStyleOptionToNum(
-            selectedNode.getStyleOption("top")
-          );
-          dragPosH =
-            convertStyleOptionToNum(selectedNode.getStyleOption("height")) +
-            e.movementY;
+          dragPosY = selectedElem.current.offsetTop;
+          dragPosH = selectedElem.current.offsetHeight + e.movementY;
         }
 
         selectedElem.current.style.top = `${dragPosY}px`;
         selectedElem.current.style.height = `${dragPosH}px`;
 
-        componentGraphicsEditor.current.style.top = `${dragPosY}px`;
+        componentGraphicsEditor.current.style.top = `${
+          dragPosY + viewport.current.scrollTop
+        }px`;
         componentGraphicsEditor.current.style.height = `${dragPosH}px`;
       }
 
       if (!["1", "7"].includes(trgtId)) {
         if (["0", "3", "6"].includes(trgtId)) {
-          dragPosX =
-            convertStyleOptionToNum(selectedElem.current.style.left) +
-            e.movementX;
-          dragPosW =
-            convertStyleOptionToNum(selectedElem.current.style.width) -
-            e.movementX;
+          dragPosX = selectedElem.current.offsetLeft + e.movementX;
+          dragPosW = selectedElem.current.offsetWidth - e.movementX;
         } else if (["2", "5", "8"].includes(trgtId)) {
-          dragPosX = convertStyleOptionToNum(selectedElem.current.style.left);
-          dragPosW =
-            convertStyleOptionToNum(selectedElem.current.style.width) +
-            e.movementX;
+          dragPosX = selectedElem.current.offsetLeft;
+          dragPosW = selectedElem.current.offsetWidth + e.movementX;
         }
 
         selectedElem.current.style.left = `${dragPosX}px`;
         selectedElem.current.style.width = `${dragPosW}px`;
 
         componentGraphicsEditor.current.style.left = `${
-          dragPosX - pointPosAdjustPixel
+          dragPosX + viewport.current.scrollLeft
         }px`;
-        componentGraphicsEditor.current.style.width = `${
-          dragPosW - pointPosAdjustPixel
-        }px`;
+        componentGraphicsEditor.current.style.width = `${dragPosW}px`;
       }
 
       setPositionOfEntityResizer();
@@ -249,21 +241,17 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
     e.preventDefault();
 
     if (selectedElem.current && componentGraphicsEditor.current) {
-      dragPosX =
-        convertStyleOptionToNum(selectedElem.current.style.left) + e.movementX;
-      dragPosY =
-        convertStyleOptionToNum(selectedElem.current.style.top) + e.movementY;
+      dragPosX = selectedElem.current.offsetLeft + e.movementX;
+      dragPosY = selectedElem.current.offsetTop + e.movementY;
 
       selectedElem.current.style.left = `${dragPosX}px`;
       selectedElem.current.style.top = `${dragPosY}px`;
 
       componentGraphicsEditor.current.style.left = `${
-        convertStyleOptionToNum(selectedElem.current.style.left) -
-        pointPosAdjustPixel
+        selectedElem.current.offsetLeft - pointPosAdjustPixel
       }px`;
       componentGraphicsEditor.current.style.top = `${
-        convertStyleOptionToNum(selectedElem.current.style.top) -
-        pointPosAdjustPixel
+        selectedElem.current.offsetTop - pointPosAdjustPixel
       }px`;
     }
   };
