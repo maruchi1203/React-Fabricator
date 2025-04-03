@@ -9,8 +9,6 @@ interface ViewportLayoutProps {
   manager: FabricateManager;
   selectedNode: ComponentTreeNode | null;
   onDropEvent: (e: React.DragEvent) => void;
-  onDragOverEvent: (e: React.DragEvent) => void;
-  onDragLeaveEvent: (e: React.DragEvent) => void;
   [x: string]: unknown;
 }
 
@@ -46,18 +44,14 @@ const InteractionSpace = styled.div`
 // #endregion styled
 
 export default function ViewportLayout(props: ViewportLayoutProps) {
-  const {
-    manager,
-    selectedNode,
-    onDropEvent,
-    onDragOverEvent,
-    onDragLeaveEvent,
-  } = props;
+  const { manager, selectedNode, onDropEvent } = props;
 
+  // Elements already placed
   const rootNode = useRef<ComponentTreeNode>();
   const viewportLayout = useRef<HTMLDivElement | null>(null);
   const viewport = useRef<HTMLDivElement | null>(null);
 
+  // Variable that
   const [scale, setScale] = useState(1);
 
   // #region useEffect
@@ -67,7 +61,7 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
       "viewport-layout"
     ) as HTMLDivElement;
     viewport.current = document.getElementById("viewport") as HTMLDivElement;
-  }, []);
+  }, [manager.nodeList]);
 
   useEffect(() => {
     if (viewportLayout.current && viewport.current) {
@@ -132,8 +126,6 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
           }}
           className="component resizable dropzone"
           onDrop={onDropEvent}
-          onDragOver={onDragOverEvent}
-          onDragLeave={onDragLeaveEvent}
         />
       </Viewport>
     </Wrapper>

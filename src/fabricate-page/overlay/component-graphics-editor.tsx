@@ -53,22 +53,34 @@ const RelocatePoint = styled.div`
 export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   const { selectedNode } = props;
 
+  // Variable with basic data types
+  const variable = {
+    dragPosX: 0,
+    dragPosY: 0,
+    dragPosW: 0,
+    dragPosH: 0,
+    originalPosX: 0,
+    originalPosY: 0,
+    originalPosW: 0,
+    originalPosH: 0,
+    adjPosPx: 6,
+    trgtId: "-1",
+  };
+
+  // Elements changed by user interaction
+  let ctrlKeyDown = false;
   const selectedElem = useRef<HTMLElement | null>(null);
 
+  // Elements already placed
   const componentGraphicsEditor = useRef<HTMLDivElement | null>(null);
-  const viewport = useRef<HTMLDivElement | null>(null);
 
+  const toolbarLayout = useRef<HTMLElement | null>(null);
+  const viewport = useRef<HTMLElement | null>(null);
+  const mainViewContainer = useRef<HTMLElement | null>(null);
+
+  // Elements Editor
   const borderLine = useRef<HTMLDivElement | null>(null);
   const pointList = useRef<HTMLDivElement[]>([]);
-
-  let eventTarget: HTMLElement | null = null;
-  let trgtId = "-1";
-
-  let dragPosX = 0;
-  let dragPosY = 0;
-  let dragPosW = 0;
-  let dragPosH = 0;
-  const pointPosAdjustPixel = 2;
 
   // #region useEffect
   useEffect(() => {
@@ -76,9 +88,11 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
       "component-graphics-editor"
     ) as HTMLDivElement;
 
-    viewport.current = document.getElementById(
-      "main-view-container"
-    ) as HTMLDivElement;
+    toolbarLayout.current = document.getElementById("tool-bar-layout");
+
+    viewport.current = document.getElementById("viewport");
+
+    mainViewContainer.current = document.getElementById("main-view-container");
 
     borderLine.current = document.getElementById(
       "border-line"
@@ -86,7 +100,7 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
 
     for (let i = 0; i < 9; i++) {
       const elem = document.getElementById(
-        "point" + i.toString()
+        "edit-point-" + i.toString()
       ) as HTMLDivElement;
 
       if (elem) {
@@ -112,10 +126,18 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
       componentGraphicsEditor.current &&
       viewport.current
     ) {
-      componentGraphicsEditor.current.style.left = `${selectedElem.current.offsetLeft}px`;
-      componentGraphicsEditor.current.style.top = `${selectedElem.current.offsetTop}px`;
-      componentGraphicsEditor.current.style.width = `${selectedElem.current.offsetWidth}px`;
-      componentGraphicsEditor.current.style.height = `${selectedElem.current.offsetHeight}px`;
+      componentGraphicsEditor.current.style.left = `${
+        selectedElem.current.offsetLeft - variable["adjPosPx"]
+      }px`;
+      componentGraphicsEditor.current.style.top = `${
+        selectedElem.current.offsetTop - variable["adjPosPx"]
+      }px`;
+      componentGraphicsEditor.current.style.width = `${
+        selectedElem.current.offsetWidth + variable["adjPosPx"] * 2
+      }px`;
+      componentGraphicsEditor.current.style.height = `${
+        selectedElem.current.offsetHeight + variable["adjPosPx"] * 2
+      }px`;
 
       setPositionOfBorderLine();
       setPositionOfBorderPoint();
@@ -124,8 +146,8 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
 
   const setPositionOfBorderLine = () => {
     if (selectedElem.current && borderLine.current) {
-      borderLine.current.style.left = `0px`;
-      borderLine.current.style.top = `0px`;
+      borderLine.current.style.left = `${variable["adjPosPx"]}px`;
+      borderLine.current.style.top = `${variable["adjPosPx"]}px`;
       borderLine.current.style.width = selectedElem.current.style.width;
       borderLine.current.style.height = selectedElem.current.style.height;
     }
@@ -156,71 +178,180 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   };
   // #endregion Initialize
 
+  // #region Wrapper
+  const OnKeyDownEvent = (e: React.KeyboardEvent) => {
+    console.log("keyDown");
+    if (e.ctrlKey) {
+      console.log("ctrlKeyDown");
+      ctrlKeyDown = true;
+    }
+  };
+
+  const OnKeyUpEvent = () => {
+    console.log("keyUp");
+    ctrlKeyDown = false;
+  };
+  // #endregion Wrapper
+
   // #region ResizePoint
   const resizePointOnMouseDownEvent = (e: React.MouseEvent) => {
-    if (selectedNode) {
-      eventTarget = e.target as HTMLDivElement;
-      trgtId = eventTarget.id[eventTarget.id.length - 1];
-      eventTarget.style.cursor = "none";
+    if (selectedElem.current) {
+      const eventTarget = e.target as HTMLDivElement;
+      variable["originalPosX"] = selectedElem.current.offsetLeft;
+      variable["originalPosY"] = selectedElem.current.offsetTop;
+      variable["originalPosW"] = selectedElem.current.offsetWidth;
+      variable["originalPosH"] = selectedElem.current.offsetHeight;
 
-      document.addEventListener("mousemove", resizePointOnMouseMoveEvent);
+      eventTarget.style.cursor = "none";
+      variable["trgtId"] = eventTarget.id[eventTarget.id.length - 1];
+
+      document.addEventListener("mousemove", resizePoint);
       document.addEventListener("mouseup", resizePointOnMouseUpEvent);
     }
   };
 
-  const resizePointOnMouseMoveEvent = (e: MouseEvent) => {
-    if (
-      selectedElem.current &&
-      componentGraphicsEditor.current &&
-      viewport.current
-    ) {
-      if (!["3", "5"].includes(trgtId)) {
-        if (["0", "1", "2"].includes(trgtId)) {
-          dragPosY = selectedElem.current.offsetTop + e.movementY;
-          dragPosH = selectedElem.current.offsetHeight - e.movementY;
-        } else if (["6", "7", "8"].includes(trgtId)) {
-          dragPosY = selectedElem.current.offsetTop;
-          dragPosH = selectedElem.current.offsetHeight + e.movementY;
+  const resizePoint = (e: MouseEvent) => {
+    console.log(ctrlKeyDown);
+    if (ctrlKeyDown == false) {
+      resizePointNormal(e);
+    } else {
+      resizePointGridSnap(e);
+    }
+
+    setPositionOfEntityResizer();
+
+    function resizePointNormal(e: MouseEvent) {
+      if (
+        selectedElem.current &&
+        componentGraphicsEditor.current &&
+        viewport.current
+      ) {
+        const offsetLeft = selectedElem.current.offsetLeft;
+        const offsetTop = selectedElem.current.offsetTop;
+        const offsetWidth = selectedElem.current.offsetWidth;
+        const offsetHeight = selectedElem.current.offsetHeight;
+
+        if (!["3", "5"].includes(variable["trgtId"])) {
+          if (["0", "1", "2"].includes(variable["trgtId"])) {
+            variable["dragPosY"] = offsetTop + e.movementY;
+            variable["dragPosH"] = offsetHeight - e.movementY;
+          } else if (["6", "7", "8"].includes(variable["trgtId"])) {
+            variable["dragPosY"] = offsetTop;
+            variable["dragPosH"] = offsetHeight + e.movementY;
+          }
+
+          selectedElem.current.style.top = `${variable["dragPosY"]}px`;
+          selectedElem.current.style.height = `${variable["dragPosH"]}px`;
+
+          componentGraphicsEditor.current.style.top = `${
+            variable["dragPosY"] + viewport.current.scrollTop
+          }px`;
+          componentGraphicsEditor.current.style.height = `${variable["dragPosH"]}px`;
         }
 
-        selectedElem.current.style.top = `${dragPosY}px`;
-        selectedElem.current.style.height = `${dragPosH}px`;
+        if (!["1", "7"].includes(variable["trgtId"].toString())) {
+          if (["0", "3", "6"].includes(variable["trgtId"])) {
+            variable["dragPosX"] = offsetLeft + e.movementX;
+            variable["dragPosW"] = offsetWidth - e.movementX;
+          } else if (["2", "5", "8"].includes(variable["trgtId"])) {
+            variable["dragPosX"] = offsetLeft;
+            variable["dragPosW"] = offsetWidth + e.movementX;
+          }
 
-        componentGraphicsEditor.current.style.top = `${
-          dragPosY + viewport.current.scrollTop
-        }px`;
-        componentGraphicsEditor.current.style.height = `${dragPosH}px`;
+          selectedElem.current.style.left = `${variable["dragPosX"]}px`;
+          selectedElem.current.style.width = `${variable["dragPosW"]}px`;
+
+          componentGraphicsEditor.current.style.left = `${
+            variable["dragPosX"] + viewport.current.scrollLeft
+          }px`;
+          componentGraphicsEditor.current.style.width = `${variable["dragPosW"]}px`;
+        }
       }
+    }
 
-      if (!["1", "7"].includes(trgtId)) {
-        if (["0", "3", "6"].includes(trgtId)) {
-          dragPosX = selectedElem.current.offsetLeft + e.movementX;
-          dragPosW = selectedElem.current.offsetWidth - e.movementX;
-        } else if (["2", "5", "8"].includes(trgtId)) {
-          dragPosX = selectedElem.current.offsetLeft;
-          dragPosW = selectedElem.current.offsetWidth + e.movementX;
+    // TODO Implement GridSnap
+    function resizePointGridSnap(e: MouseEvent) {
+      if (
+        selectedElem.current &&
+        selectedElem.current.parentElement &&
+        componentGraphicsEditor.current &&
+        viewport.current &&
+        mainViewContainer.current &&
+        toolbarLayout.current
+      ) {
+        const offsetLeft = selectedElem.current.offsetLeft;
+        const offsetTop = selectedElem.current.offsetTop;
+
+        const mousePosInInteractionSpaceX =
+          Math.floor(
+            (e.clientX +
+              mainViewContainer.current.scrollLeft -
+              viewport.current.offsetLeft -
+              selectedElem.current.parentElement.offsetLeft) /
+              100
+          ) * 100;
+        const mousePosInInteractionSpaceY =
+          Math.floor(
+            (e.clientY +
+              mainViewContainer.current.scrollTop -
+              viewport.current.offsetTop -
+              selectedElem.current.parentElement.offsetTop -
+              toolbarLayout.current.offsetHeight) /
+              100
+          ) * 100;
+
+        if (!["3", "5"].includes(variable["trgtId"])) {
+          if (["0", "1", "2"].includes(variable["trgtId"])) {
+            variable["dragPosY"] = mousePosInInteractionSpaceY;
+            variable["dragPosH"] =
+              variable["originalPosY"] -
+              mousePosInInteractionSpaceY +
+              variable["originalPosH"];
+          } else if (["6", "7", "8"].includes(variable["trgtId"])) {
+            variable["dragPosY"] = offsetTop;
+            variable["dragPosH"] = mousePosInInteractionSpaceY - offsetTop;
+          }
+
+          selectedElem.current.style.top = `${variable["dragPosY"]}px`;
+          selectedElem.current.style.height = `${variable["dragPosH"]}px`;
+
+          componentGraphicsEditor.current.style.top = `${
+            variable["dragPosY"] + viewport.current.scrollTop
+          }px`;
+          componentGraphicsEditor.current.style.height = `${variable["dragPosH"]}px`;
         }
 
-        selectedElem.current.style.left = `${dragPosX}px`;
-        selectedElem.current.style.width = `${dragPosW}px`;
+        if (!["1", "7"].includes(variable["trgtId"].toString())) {
+          if (["0", "3", "6"].includes(variable["trgtId"])) {
+            variable["dragPosX"] = mousePosInInteractionSpaceX;
+            variable["dragPosW"] =
+              variable["originalPosX"] -
+              mousePosInInteractionSpaceX +
+              variable["originalPosW"];
+          } else if (["2", "5", "8"].includes(variable["trgtId"])) {
+            variable["dragPosX"] = offsetLeft;
+            variable["dragPosW"] = mousePosInInteractionSpaceX - offsetLeft;
+          }
 
-        componentGraphicsEditor.current.style.left = `${
-          dragPosX + viewport.current.scrollLeft
-        }px`;
-        componentGraphicsEditor.current.style.width = `${dragPosW}px`;
+          selectedElem.current.style.left = `${variable["dragPosX"]}px`;
+          selectedElem.current.style.width = `${variable["dragPosW"]}px`;
+
+          componentGraphicsEditor.current.style.left = `${
+            variable["dragPosX"] + viewport.current.scrollLeft
+          }px`;
+          componentGraphicsEditor.current.style.width = `${variable["dragPosW"]}px`;
+        }
       }
-
-      setPositionOfEntityResizer();
     }
   };
 
   const resizePointOnMouseUpEvent = (e: MouseEvent) => {
     e.preventDefault();
 
-    eventTarget = e.target as HTMLElement;
+    const eventTarget = e.target as HTMLElement;
     eventTarget.style.cursor = "default";
 
-    document.removeEventListener("mousemove", resizePointOnMouseMoveEvent);
+    document.removeEventListener("mousemove", resizePoint);
     document.removeEventListener("mouseup", resizePointOnMouseUpEvent);
   };
   // #endregion ResizePoint
@@ -228,40 +359,66 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   // #region RelocatePoint
   const relocatePointOnMouseDownEvent = (e: React.MouseEvent) => {
     e.preventDefault();
-    eventTarget = e.target as HTMLElement;
+    const eventTarget = e.target as HTMLElement;
     eventTarget.style.cursor = "none";
 
     if (selectedElem.current) {
-      document.addEventListener("mousemove", relocatePointOnMouseMoveEvent);
+      document.addEventListener("mousemove", relocatePoint);
       document.addEventListener("mouseup", relocatePointOnMouseUpEvent);
     }
   };
 
-  const relocatePointOnMouseMoveEvent = (e: MouseEvent) => {
+  const relocatePoint = (e: MouseEvent) => {
     e.preventDefault();
 
-    if (selectedElem.current && componentGraphicsEditor.current) {
-      dragPosX = selectedElem.current.offsetLeft + e.movementX;
-      dragPosY = selectedElem.current.offsetTop + e.movementY;
+    if (ctrlKeyDown == false) {
+      relocatePointNormal();
+    } else {
+      relocatePointGridSnap();
+    }
 
-      selectedElem.current.style.left = `${dragPosX}px`;
-      selectedElem.current.style.top = `${dragPosY}px`;
+    function relocatePointNormal() {
+      if (selectedElem.current && componentGraphicsEditor.current) {
+        variable["dragPosX"] = selectedElem.current.offsetLeft + e.movementX;
+        variable["dragPosY"] = selectedElem.current.offsetTop + e.movementY;
 
-      componentGraphicsEditor.current.style.left = `${
-        selectedElem.current.offsetLeft - pointPosAdjustPixel
-      }px`;
-      componentGraphicsEditor.current.style.top = `${
-        selectedElem.current.offsetTop - pointPosAdjustPixel
-      }px`;
+        selectedElem.current.style.left = `${variable["dragPosX"]}px`;
+        selectedElem.current.style.top = `${variable["dragPosY"]}px`;
+
+        componentGraphicsEditor.current.style.left = `${
+          selectedElem.current.offsetLeft - variable["adjPosPx"]
+        }px`;
+        componentGraphicsEditor.current.style.top = `${
+          selectedElem.current.offsetTop - variable["adjPosPx"]
+        }px`;
+      }
+    }
+
+    // TODO Implement GridSnap
+    function relocatePointGridSnap() {
+      if (selectedElem.current && componentGraphicsEditor.current) {
+        variable["dragPosX"] = selectedElem.current.offsetLeft + e.movementX;
+        variable["dragPosY"] = selectedElem.current.offsetTop + e.movementY;
+
+        selectedElem.current.style.left = `${variable["dragPosX"]}px`;
+        selectedElem.current.style.top = `${variable["dragPosY"]}px`;
+
+        componentGraphicsEditor.current.style.left = `${
+          selectedElem.current.offsetLeft - variable["adjPosPx"]
+        }px`;
+        componentGraphicsEditor.current.style.top = `${
+          selectedElem.current.offsetTop - variable["adjPosPx"]
+        }px`;
+      }
     }
   };
 
   const relocatePointOnMouseUpEvent = (e: MouseEvent) => {
     e.preventDefault();
-    eventTarget = e.target as HTMLElement;
+    const eventTarget = e.target as HTMLElement;
     eventTarget.style.cursor = "default";
 
-    document.removeEventListener("mousemove", relocatePointOnMouseMoveEvent);
+    document.removeEventListener("mousemove", relocatePoint);
     document.removeEventListener("mouseup", relocatePointOnMouseUpEvent);
   };
   // #endregion RelocatePoint
@@ -269,52 +426,55 @@ export default function ComponentGraphicsEditor(props: EntityResizerProps) {
   return (
     <Wrapper
       id="component-graphics-editor"
+      tabIndex={0}
       hidden={selectedNode ? false : true}
+      onKeyDown={OnKeyDownEvent}
+      onKeyUp={OnKeyUpEvent}
     >
       {/* <ComponentInfoBox compInfo={selectedNode} /> */}
       <BorderLine id="border-line" />
       <ResizePoint
-        id="point0"
+        id="edit-point-0"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point1"
+        id="edit-point-1"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point2"
+        id="edit-point-2"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point3"
+        id="edit-point-3"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <RelocatePoint
-        id="point4"
+        id="edit-point-4"
         className="fix-select"
         onMouseDown={relocatePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point5"
+        id="edit-point-5"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point6"
+        id="edit-point-6"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point7"
+        id="edit-point-7"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />
       <ResizePoint
-        id="point8"
+        id="edit-point-8"
         className="fix-select"
         onMouseDown={resizePointOnMouseDownEvent}
       />

@@ -4,37 +4,43 @@ export default class ComponentTreeNode {
   private key: string;
   private parent: ComponentTreeNode | null;
   private children: ComponentTreeNode[];
+  private depth: number;
   private elementInfo: { [key: string]: unknown };
-  private element: React.ReactElement | null = null;
+  private element: React.ReactElement | HTMLElement | null = null;
 
   constructor(
     key: string,
     parent: ComponentTreeNode | null = null,
     children: ComponentTreeNode[] = [],
+    depth: number = 0,
     elementInfo: { [key: string]: unknown }
   ) {
     this.key = key;
     this.parent = parent;
     this.children = children;
+    this.depth = depth;
     this.elementInfo = elementInfo;
   }
 
+  // Key
   getKey() {
     return this.key;
   }
 
-  setName(value: string) {
+  setKey(value: string) {
     this.key = value;
+  }
+
+  // Parent
+  getParent() {
+    return this.parent;
   }
 
   setParent(value: ComponentTreeNode | null = null) {
     this.parent = value;
   }
 
-  getParent() {
-    return this.parent;
-  }
-
+  // Children
   getChild(key: string) {
     for (const child of this.children) {
       if (child.getKey() === key) {
@@ -75,14 +81,25 @@ export default class ComponentTreeNode {
     }
   }
 
+  // Depth
+  getDepth() {
+    return this.depth;
+  }
+
+  setDepth(depth: number) {
+    this.depth = depth;
+  }
+
+  // Element
   getElement() {
     return this.element;
   }
 
-  setElement(value: React.ReactElement) {
+  setElement(value: React.ReactElement | HTMLElement) {
     this.element = value;
   }
 
+  // StyledOption
   getStyleOption(key: string) {
     const styleOption = (
       this.elementInfo["props"] as { [key: string]: unknown }
@@ -111,5 +128,16 @@ export default class ComponentTreeNode {
     }
 
     return <>{elems}</>;
+  }
+
+  createHierarchyTreeComponent(): ComponentTreeNode[] {
+    const elems = [];
+
+    elems.push(this);
+    for (const child of this.children) {
+      elems.push(...child.createHierarchyTreeComponent());
+    }
+
+    return elems;
   }
 }

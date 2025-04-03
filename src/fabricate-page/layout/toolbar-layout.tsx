@@ -11,7 +11,7 @@ const Wrapper = styled.div`
 
   flex-shrink: 0;
 
-  background-color: white;
+  background-color: black;
 `;
 
 export default function ToolBarLayout(props: ToolBarLayoutProps) {
