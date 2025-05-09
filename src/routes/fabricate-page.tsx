@@ -1,13 +1,12 @@
 import styled from "styled-components";
-import React, { useEffect, useRef, useState } from "react";
+import React, { ReactElement, useEffect, useRef, useState } from "react";
 import {
   ComponentLayout,
   HierarchyLayout,
   ToolBarLayout,
   ViewportLayout,
 } from "../fabricate-page/layout";
-import { createRoot, Root } from "react-dom/client";
-import { Button, Panel } from "../fabricate-page/component";
+import { Button, Panel } from "../fabricate-page/placable";
 import ComponentTreeNode from "../fabricate-page/info/component-tree-node";
 import { getRandomKey } from "../general/util";
 import Fabricatemanager from "../fabricate-page/fabricate-manager";
@@ -74,6 +73,7 @@ export default function FabricatePage() {
     new Fabricatemanager()
   );
   const nodeList: ComponentTreeNode[] = manager.nodeList;
+  const [treeForRendering, setTreeForRendering] = useState<ReactElement[]>([]);
 
   // Variable with basic data types
   const variable = {
@@ -83,7 +83,7 @@ export default function FabricatePage() {
 
   // Elements changed by user interaction
   const draggedElem = useRef<HTMLElement | null>(null);
-  const lastClickedElem = useRef<HTMLElement | null>(null);
+  const [isKeepFocusElem, setIsKeepFocusElem] = useState<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<ComponentTreeNode | null>(
     null
   );
@@ -92,7 +92,7 @@ export default function FabricatePage() {
   const toolbarLayout = useRef<HTMLElement | null>(null);
   const mainViewContainer = useRef<HTMLElement | null>(null);
   const viewport = useRef<HTMLElement | null>(null);
-  const interactionSpace = useRef<Root | null>(null);
+  const interactionSpace = useRef<HTMLElement | null>(null);
   //#endregion variables
 
   // #region useEffect
@@ -100,11 +100,9 @@ export default function FabricatePage() {
     toolbarLayout.current = document.getElementById("tool-bar-layout");
     mainViewContainer.current = document.getElementById("main-view-container");
     viewport.current = document.getElementById("viewport");
-    const interactionSpaceElem = document.getElementById("interaction-space");
+    interactionSpace.current = document.getElementById("interaction-space");
 
-    if (interactionSpaceElem && !interactionSpace.current) {
-      interactionSpace.current = createRoot(interactionSpaceElem);
-
+    if (interactionSpace.current) {
       const node = new ComponentTreeNode("interaction-space", null, [], 0, {
         type: Panel,
         props: {
@@ -114,7 +112,7 @@ export default function FabricatePage() {
       });
 
       nodeList.push(node);
-      node.setElement(interactionSpaceElem);
+      node.setElement(interactionSpace.current);
     }
   }, [nodeList]);
   // #endregion useEffect
@@ -122,23 +120,19 @@ export default function FabricatePage() {
   // #region WorkingSpace
   const SetSelectedElem = (e: React.MouseEvent) => {
     e.preventDefault();
-
-    const exceptList = ["viewport-layout", "component-graphics-editor"];
-
-    if (lastClickedElem.current?.classList.contains("fix-select")) {
-      return;
-    }
-
-    if (exceptList.includes((e.target as HTMLElement).id)) {
-      setSelectedNode(null);
-    } else {
+    if ((e.target as HTMLDivElement).classList.contains("component")) {
       setSelectedNode(manager.getNodeByKey((e.target as HTMLElement).id));
+    } else if (isKeepFocusElem) {
+      return;
+    } else {
+      setSelectedNode(null);
     }
   };
 
-  const OnMouseDownEvent = (e: React.MouseEvent) => {
-    const eventTarget = e.target as HTMLDivElement;
-    lastClickedElem.current = eventTarget;
+  const CheckClassOfElem = (e: React.MouseEvent) => {
+    setIsKeepFocusElem(
+      (e.target as HTMLElement).classList.contains("keep-focus")
+    );
   };
 
   const OnDragOverEvent = (e: React.DragEvent) => {
@@ -215,19 +209,8 @@ export default function FabricatePage() {
            * - toolbarLayout.current.clientHeight : To exclude toolbar's height
            * - dragStartPosY : Coordinate in dragElem when drag started
            **/
-          newElemPosLeft =
-            e.clientX +
-            mainViewContainer.current.scrollLeft -
-            viewport.current.offsetLeft -
-            eventTarget.offsetLeft -
-            variable["dragStartPosX"];
-          newElemPosTop =
-            e.clientY +
-            mainViewContainer.current.scrollTop -
-            viewport.current.offsetTop -
-            eventTarget.offsetTop -
-            variable["dragStartPosY"] -
-            toolbarLayout.current.offsetHeight;
+          newElemPosLeft = 0;
+          newElemPosTop = 0;
         }
 
         newElemStyle = {
@@ -277,12 +260,10 @@ export default function FabricatePage() {
         nodeList.push(newReactElem);
       }
 
-      if (interactionSpace.current) {
-        interactionSpace.current.render(nodeList[0]?.createReactElementTree());
-        const newRenderedReactElem = manager.getNodeByKey(key);
-        if (newRenderedReactElem) {
-          setSelectedNode(newRenderedReactElem);
-        }
+      setTreeForRendering(nodeList[0]?.createReactElementTree());
+      const newRenderedReactElem = manager.getNodeByKey(key);
+      if (newRenderedReactElem) {
+        setSelectedNode(newRenderedReactElem);
       }
     }
   }
@@ -305,7 +286,7 @@ export default function FabricatePage() {
       <ToolBarLayout id="tool-bar-layout"></ToolBarLayout>
       <WorkingSpace
         onClick={SetSelectedElem}
-        onMouseDown={OnMouseDownEvent}
+        onMouseDown={CheckClassOfElem}
         onDragOver={OnDragOverEvent}
         onDragLeave={OnDragLeaveEvent}
       >
@@ -313,6 +294,7 @@ export default function FabricatePage() {
           <ViewportLayout
             manager={manager}
             selectedNode={selectedNode}
+            treeForRendering={treeForRendering}
             onDropEvent={placeComponentOnInteractionSpace}
           />
         </MainViewContainer>

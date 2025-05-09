@@ -19,14 +19,14 @@ const Wrapper = styled.button`
 `;
 // #endregion styled
 
-export default function Button(props: ButtonProps) {
+export default function ComponentButton(props: ButtonProps) {
   const { compKey, style } = props;
 
   return (
     <Wrapper
       id={compKey}
       key={compKey}
-      className="component button resizable"
+      className="component button"
       draggable="true"
       style={style}
     >

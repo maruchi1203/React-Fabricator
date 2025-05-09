@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import Panel from "../component/component-panel";
-import Button from "../component/component-button";
+import ElementPanel from "../placable/component/component-panel";
+import ComponentButton from "../placable/component/component-button";
 
 const Wrapper = styled.div`
   flex-grow: 1;
@@ -39,7 +39,7 @@ export default function ComponentLayout() {
     <Wrapper>
       <ComponentShelf>
         <ComponentBox>
-          <Panel
+          <ElementPanel
             compKey={"panel"}
             style={{}}
             onDropEvent={(e: React.DragEvent) => {
@@ -49,7 +49,7 @@ export default function ComponentLayout() {
           <span>Panel</span>
         </ComponentBox>
         <ComponentBox>
-          <Button compKey={"button"} style={{}} />
+          <ComponentButton compKey={"button"} style={{}} />
           <span>Button</span>
         </ComponentBox>
       </ComponentShelf>

@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-interface PanelProps {
+interface GridProps {
   compKey: string;
   style: { [key: string]: string };
   [x: string]: unknown;
@@ -16,16 +16,18 @@ const Wrapper = styled.div`
   border: 1px solid black;
 `;
 
-export default function Panel(props: PanelProps) {
-  const { compKey, style } = props;
+export default function LayoutGrid(props: GridProps) {
+  const { compKey, style, ...other } = props;
 
   return (
     <Wrapper
       id={compKey}
       key={compKey}
-      className="component panel resizable dropzone"
+      className="component panel dropzone"
       draggable="true"
       style={style}
-    ></Wrapper>
+    >
+      {other["children"] as React.ReactElement[]}
+    </Wrapper>
   );
 }

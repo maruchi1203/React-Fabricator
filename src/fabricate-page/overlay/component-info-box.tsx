@@ -1,7 +1,8 @@
 import styled from "styled-components";
+import ComponentTreeNode from "../info/component-tree-node";
 
 interface EntityInfoBoxProps {
-  compInfo: CompInfoDTO | null;
+  selectedNode: ComponentTreeNode | null;
   [x: string]: unknown;
 }
 
@@ -16,18 +17,24 @@ const CompInfo = styled.div`
 `;
 
 export default function ComponentInfoBox(props: EntityInfoBoxProps) {
-  const { compInfo } = props;
+  const { selectedNode } = props;
+  const styleOption = 
 
-  if (compInfo) {
-    return (
-      <Wrapper>
-        <CompInfo>Left : {compInfo.get("left") as string}</CompInfo>
-        <CompInfo>Top : {compInfo.get("top") as string}</CompInfo>
-        <CompInfo>Width : {compInfo.get("width") as string}</CompInfo>
-        <CompInfo>Height : {compInfo.get("height") as string}</CompInfo>
-      </Wrapper>
-    );
-  } else {
-    return null;
-  }
+  const variables = {
+    offsetleft: ,
+  };
+
+  return (
+    <Wrapper>
+      {
+        array.forEach(element => {
+          
+        });
+      }
+      <CompInfo>Left : {variables["left"] as string}</CompInfo>
+      <CompInfo>Top : {variables["top"] as string}</CompInfo>
+      <CompInfo>Width : {variables["left"] as string}</CompInfo>
+      <CompInfo>Height : {variables["left"] as string}</CompInfo>
+    </Wrapper>
+  );
 }

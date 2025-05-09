@@ -50,17 +50,14 @@ export default function HierarchyLayout(props: HierarchyLayoutProps) {
       let idx = 0;
 
       for (const node of hrchyNodeList) {
-        console.log(
-          "hierarchy-layout/useEffect[manager.nodeList.length]: " +
-            node.getDepth()
-        );
-
         const comp = (
           <HierarchyTreeComponent
             key={idx}
             compType={"type"}
             compName={node.getKey()}
             depth={node.getDepth()}
+            iconToggle={node.getChildren().length > 0}
+            expandToggle={true}
           />
         );
 

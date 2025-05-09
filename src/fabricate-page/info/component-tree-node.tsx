@@ -1,12 +1,42 @@
-import React, { createElement, FunctionComponent, ReactElement } from "react";
+import {
+  Attributes,
+  createElement,
+  FunctionComponent,
+  ReactElement,
+} from "react";
 
 export default class ComponentTreeNode {
   private key: string;
   private parent: ComponentTreeNode | null;
   private children: ComponentTreeNode[];
   private depth: number;
-  private elementInfo: { [key: string]: unknown };
-  private element: React.ReactElement | HTMLElement | null = null;
+  private elementInfo: { [key: string]: unknown } = {
+    // Size
+    width: "0",
+    height: "0",
+    // Position
+    offsetLeft: "0",
+    offsetTop: "0",
+    pageLeft: "0",
+    pageTop: "0",
+    // Relative Position
+    relativeStandardId: "",
+    relativeLeft: "0",
+    relativeRight: "0",
+    relativeTop: "0",
+    relativeBottom: "0",
+    // Dock
+    dock: "none", // none, left, top, center, bottom, right
+
+    // ETC
+    align: "",
+    color: "",
+    border: "",
+
+    // Flex
+
+    // Grid
+  };
 
   constructor(
     key: string,
@@ -90,15 +120,6 @@ export default class ComponentTreeNode {
     this.depth = depth;
   }
 
-  // Element
-  getElement() {
-    return this.element;
-  }
-
-  setElement(value: React.ReactElement | HTMLElement) {
-    this.element = value;
-  }
-
   // StyledOption
   getStyleOption(key: string) {
     const styleOption = (
@@ -109,7 +130,7 @@ export default class ComponentTreeNode {
   }
 
   // return react element
-  createReactElementTree(): ReactElement {
+  createReactElementTree(): ReactElement[] {
     const elems = [];
 
     for (const child of this.children) {
@@ -120,14 +141,13 @@ export default class ComponentTreeNode {
           key: child.getKey(),
           compKey: child.getKey(),
           ...(child.elementInfo["props"] as { [key: string]: unknown }),
-        } as React.Attributes,
-        childTree
-      ) as React.ReactElement;
-      child.setElement(elem);
+        } as Attributes,
+        ...childTree
+      ) as ReactElement;
+
       elems.push(elem);
     }
-
-    return <>{elems}</>;
+    return elems;
   }
 
   createHierarchyTreeComponent(): ComponentTreeNode[] {

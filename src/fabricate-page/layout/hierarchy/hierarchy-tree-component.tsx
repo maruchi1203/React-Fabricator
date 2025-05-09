@@ -25,7 +25,12 @@ const Wrapper = styled.div`
   }
 `;
 
-const ExpandCollapseIcon = styled.div``;
+const ExpandCollapseButton = styled.button`
+  background: none;
+  border: none;
+
+  color: gray;
+`;
 
 const ComponentIcon = styled.div`
   padding: 5px;
@@ -39,20 +44,27 @@ const ComponentName = styled.div`
 export default function HierarchyTreeComponent(
   props: HierarchyTreeComponentProps
 ) {
-  const { compType, compName, depth, ecToggle, ...other } = props;
+  const { compType, compName, depth, iconToggle, expandToggle, ...other } =
+    props;
 
+  // #region variables
   const wrapperRef = useRef(null);
+  // #endregion variables
 
+  // #region useEffect
   useEffect(() => {
     if (wrapperRef.current) {
       const wrapper = wrapperRef.current as HTMLElement;
       wrapper.style.paddingLeft = `${20 * depth}px`;
     }
   }, [depth]);
+  // #endregion useEffect
 
   return (
     <Wrapper ref={wrapperRef}>
-      <ExpandCollapseIcon>{ecToggle ? "▼" : "▲"}</ExpandCollapseIcon>
+      <ExpandCollapseButton>
+        {iconToggle ? (expandToggle ? "▼" : "▶") : null}
+      </ExpandCollapseButton>
       <ComponentIcon>{compType}</ComponentIcon>
       <ComponentName>{compName}</ComponentName>
     </Wrapper>

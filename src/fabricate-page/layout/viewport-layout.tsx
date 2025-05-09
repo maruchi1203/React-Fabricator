@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import React, { useEffect, useRef, useState } from "react";
-import { ComponentGraphicsEditor } from "../overlay";
+import React, { ReactElement, useEffect, useRef, useState } from "react";
+import { ComponentGraphicsEditor, ComponentInfoBox } from "../overlay";
 import ComponentTreeNode from "../info/component-tree-node";
 import { convertStyleOptionToNum } from "../../general/util";
 import FabricateManager from "../fabricate-manager";
@@ -8,6 +8,7 @@ import FabricateManager from "../fabricate-manager";
 interface ViewportLayoutProps {
   manager: FabricateManager;
   selectedNode: ComponentTreeNode | null;
+  treeForRendering: ReactElement[];
   onDropEvent: (e: React.DragEvent) => void;
   [x: string]: unknown;
 }
@@ -44,7 +45,7 @@ const InteractionSpace = styled.div`
 // #endregion styled
 
 export default function ViewportLayout(props: ViewportLayoutProps) {
-  const { manager, selectedNode, onDropEvent } = props;
+  const { manager, selectedNode, treeForRendering, onDropEvent } = props;
 
   // Elements already placed
   const rootNode = useRef<ComponentTreeNode>();
@@ -113,7 +114,10 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
     <Wrapper id="viewport-layout" tabIndex={0} onWheel={resizeViewport}>
       <Viewport id="viewport" tabIndex={1}>
         {selectedNode ? (
-          <ComponentGraphicsEditor selectedNode={selectedNode} />
+          <>
+            <ComponentGraphicsEditor selectedNode={selectedNode} />
+            <ComponentInfoBox selectedNode={selectedNode} />
+          </>
         ) : null}
         <InteractionSpace
           id="interaction-space"
@@ -124,9 +128,11 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
             width: "1200px",
             height: "800px",
           }}
-          className="component resizable dropzone"
+          className="dropzone"
           onDrop={onDropEvent}
-        />
+        >
+          {treeForRendering}
+        </InteractionSpace>
       </Viewport>
     </Wrapper>
   );
