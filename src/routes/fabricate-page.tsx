@@ -1,12 +1,18 @@
 import styled from "styled-components";
-import React, { ReactElement, useEffect, useRef, useState } from "react";
+import React, {
+  FunctionComponent,
+  ReactElement,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
-  ComponentLayout,
-  HierarchyLayout,
-  ToolBarLayout,
-  ViewportLayout,
-} from "../fabricate-page/layout";
-import { Button, Panel } from "../fabricate-page/placable";
+  ViewComponents,
+  ViewHierarchy,
+  ViewToolbar,
+  ViewViewport,
+} from "../fabricate-page/view";
+import { ComponentButton, ComponentPanel } from "../fabricate-page/placable";
 import ComponentTreeNode from "../fabricate-page/info/component-tree-node";
 import { getRandomKey } from "../general/util";
 import Fabricatemanager from "../fabricate-page/fabricate-manager";
@@ -97,22 +103,30 @@ export default function FabricatePage() {
 
   // #region useEffect
   useEffect(() => {
-    toolbarLayout.current = document.getElementById("tool-bar-layout");
+    toolbarLayout.current = document.getElementById("toolbar");
     mainViewContainer.current = document.getElementById("main-view-container");
     viewport.current = document.getElementById("viewport");
     interactionSpace.current = document.getElementById("interaction-space");
 
     if (interactionSpace.current) {
-      const node = new ComponentTreeNode("interaction-space", null, [], 0, {
-        type: Panel,
-        props: {
-          style: { left: "0px", top: "0px", width: "1200px", height: "800px" },
+      const node = new ComponentTreeNode(
+        "interaction-space",
+        null,
+        [],
+        0,
+        ComponentPanel as FunctionComponent,
+        {
+          style: {
+            left: "0px",
+            top: "0px",
+            width: "1200px",
+            height: "800px",
+          },
           draggable: false,
-        },
-      });
+        }
+      );
 
       nodeList.push(node);
-      node.setElement(interactionSpace.current);
     }
   }, [nodeList]);
   // #endregion useEffect
@@ -153,16 +167,14 @@ export default function FabricatePage() {
     const key = getRandomKey(10);
     const eventTarget = e.target as HTMLElement;
     const parentNode = manager.getNodeByKey(eventTarget.id);
-    let newReactElem;
 
     if (draggedElem.current && eventTarget.classList.contains("dropzone")) {
-      let newElemStyle = null;
-
       if (
         mainViewContainer.current &&
         viewport.current &&
         toolbarLayout.current
       ) {
+        let newNode;
         let newElemPosLeft = 0;
         let newElemPosTop = 0;
 
@@ -213,57 +225,59 @@ export default function FabricatePage() {
           newElemPosTop = 0;
         }
 
-        newElemStyle = {
+        const newNodeStyle = {
           position: "absolute",
           left: `${newElemPosLeft}px`,
           top: `${newElemPosTop}px`,
-          width: `${draggedElem.current.offsetWidth}px`,
-          height: `${draggedElem.current.offsetHeight}px`,
-          background: "white",
         };
-      }
 
-      if (eventTarget.id && parentNode) {
-        if (draggedElem.current.classList.contains("panel")) {
-          newReactElem = new ComponentTreeNode(
-            key,
-            parentNode,
-            [],
-            parentNode.getDepth() + 1,
-            {
-              type: Panel,
-              props: {
-                style: newElemStyle,
-                draggable: false,
-              },
-            }
-          );
-        } else if (draggedElem.current.classList.contains("button")) {
-          newReactElem = new ComponentTreeNode(
-            key,
-            parentNode,
-            [],
-            parentNode.getDepth() + 1,
-            {
-              type: Button,
-              props: {
-                style: newElemStyle,
-                draggable: false,
-              },
-            }
-          );
+        // Load placable component by className
+        if (eventTarget.id && parentNode) {
+          if (draggedElem.current.classList.contains("panel")) {
+            newNode = new ComponentTreeNode(
+              key,
+              parentNode,
+              [],
+              parentNode.getDepth() + 1,
+              ComponentPanel as FunctionComponent,
+              {
+                style: {
+                  ...newNodeStyle,
+                  width: "150px",
+                  height: "100px",
+                },
+                draggable: "false",
+              }
+            );
+          } else if (draggedElem.current.classList.contains("button")) {
+            newNode = new ComponentTreeNode(
+              key,
+              parentNode,
+              [],
+              parentNode.getDepth() + 1,
+              ComponentButton as FunctionComponent,
+              {
+                style: {
+                  ...newNodeStyle,
+                  width: "100px",
+                  height: "40px",
+                },
+                draggable: "false",
+              }
+            );
+          }
         }
-      }
 
-      if (parentNode && newReactElem) {
-        parentNode.appendChild(newReactElem);
-        nodeList.push(newReactElem);
-      }
+        if (parentNode && newNode) {
+          parentNode.appendChild(newNode);
+          nodeList.push(newNode);
+        }
 
-      setTreeForRendering(nodeList[0]?.createReactElementTree());
-      const newRenderedReactElem = manager.getNodeByKey(key);
-      if (newRenderedReactElem) {
-        setSelectedNode(newRenderedReactElem);
+        setTreeForRendering(nodeList[0]?.createReactElementTree());
+        const newElem = manager.getNodeByKey(key);
+        if (newElem) {
+          setSelectedNode(newElem);
+        }
       }
     }
   }
@@ -283,7 +297,7 @@ export default function FabricatePage() {
 
   return (
     <Wrapper>
-      <ToolBarLayout id="tool-bar-layout"></ToolBarLayout>
+      <ViewToolbar id="toolbar"></ViewToolbar>
       <WorkingSpace
         onClick={SetSelectedElem}
         onMouseDown={CheckClassOfElem}
@@ -291,7 +305,7 @@ export default function FabricatePage() {
         onDragLeave={OnDragLeaveEvent}
       >
         <MainViewContainer id="main-view-container">
-          <ViewportLayout
+          <ViewViewport
             manager={manager}
             selectedNode={selectedNode}
             treeForRendering={treeForRendering}
@@ -302,8 +316,8 @@ export default function FabricatePage() {
           onDragStart={dragStartForPlacingComponent}
           onDragEnd={dragEndForPlacingComponent}
         >
-          <HierarchyLayout manager={manager} selectedNode={selectedNode} />
-          <ComponentLayout />
+          <ViewHierarchy manager={manager} selectedNode={selectedNode} />
+          <ViewComponents />
         </SideViewContainer>
       </WorkingSpace>
     </Wrapper>

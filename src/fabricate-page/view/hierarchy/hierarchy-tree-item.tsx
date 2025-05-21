@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import styled from "styled-components";
 
-interface HierarchyTreeComponentProps {
+interface HierarchyTreeItemProps {
   compType: string;
   compName: string;
   depth: number;
@@ -41,11 +41,8 @@ const ComponentName = styled.div`
 `;
 // #endregion styled
 
-export default function HierarchyTreeComponent(
-  props: HierarchyTreeComponentProps
-) {
-  const { compType, compName, depth, iconToggle, expandToggle, ...other } =
-    props;
+export default function HierarchyTreeItem(props: HierarchyTreeItemProps) {
+  const { compType, compName, depth, iconToggle, expandToggle } = props;
 
   // #region variables
   const wrapperRef = useRef(null);

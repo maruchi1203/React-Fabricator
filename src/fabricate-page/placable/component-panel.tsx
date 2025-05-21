@@ -1,33 +1,31 @@
 import styled from "styled-components";
 
-interface GridProps {
+interface ComponentPanelProps {
   compKey: string;
-  style: { [key: string]: string };
+  children: React.ReactElement[];
   [x: string]: unknown;
 }
 
+// #region styled
 const Wrapper = styled.div`
   position: relative;
-
-  width: 150px;
-  height: 100px;
 
   background-color: white;
   border: 1px solid black;
 `;
+// #endregion styled
 
-export default function LayoutGrid(props: GridProps) {
-  const { compKey, style, ...other } = props;
+export default function ComponentPanel(props: ComponentPanelProps) {
+  const { compKey, children, ...other } = props;
 
   return (
     <Wrapper
       id={compKey}
       key={compKey}
       className="component panel dropzone"
-      draggable="true"
-      style={style}
+      {...other}
     >
-      {other["children"] as React.ReactElement[]}
+      {children}
     </Wrapper>
   );
 }

@@ -5,7 +5,7 @@ import ComponentTreeNode from "../info/component-tree-node";
 import { convertStyleOptionToNum } from "../../general/util";
 import FabricateManager from "../fabricate-manager";
 
-interface ViewportLayoutProps {
+interface ViewViewportProps {
   manager: FabricateManager;
   selectedNode: ComponentTreeNode | null;
   treeForRendering: ReactElement[];
@@ -44,7 +44,7 @@ const InteractionSpace = styled.div`
 // `;
 // #endregion styled
 
-export default function ViewportLayout(props: ViewportLayoutProps) {
+export default function ViewViewport(props: ViewViewportProps) {
   const { manager, selectedNode, treeForRendering, onDropEvent } = props;
 
   // Elements already placed
@@ -62,7 +62,7 @@ export default function ViewportLayout(props: ViewportLayoutProps) {
       "viewport-layout"
     ) as HTMLDivElement;
     viewport.current = document.getElementById("viewport") as HTMLDivElement;
-  }, [manager.nodeList]);
+  }, []);
 
   useEffect(() => {
     if (viewportLayout.current && viewport.current) {

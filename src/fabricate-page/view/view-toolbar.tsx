@@ -1,10 +1,11 @@
 import styled from "styled-components";
 
-interface ToolBarLayoutProps {
+interface ViewToolbarProps {
   id: string;
   [key: string]: unknown;
 }
 
+// #region styled
 const Wrapper = styled.div`
   height: 64px;
   width: 100%;
@@ -13,9 +14,10 @@ const Wrapper = styled.div`
 
   background-color: black;
 `;
+// #endregion styled
 
-export default function ToolBarLayout(props: ToolBarLayoutProps) {
-  const { id, ...other } = props;
+export default function ViewToolbar(props: ViewToolbarProps) {
+  const { id } = props;
 
   return <Wrapper id={id}></Wrapper>;
 }

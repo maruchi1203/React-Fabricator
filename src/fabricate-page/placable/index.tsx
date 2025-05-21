@@ -1,4 +1,4 @@
-import ElementPanel from "./component/component-panel";
-import ComponentButton from "./component/component-button";
+import ComponentPanel from "./component-panel";
+import ComponentButton from "./component-button";
 
-export { ElementPanel as Panel, ComponentButton as Button };
+export { ComponentPanel, ComponentButton };

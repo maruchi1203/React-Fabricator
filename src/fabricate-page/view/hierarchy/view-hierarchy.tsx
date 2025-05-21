@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import FabricateManager from "../../fabricate-manager";
 import ComponentTreeNode from "../../info/component-tree-node";
-import HierarchyTreeComponent from "./hierarchy-tree-component";
+import HierarchyTreeItem from "./hierarchy-tree-item";
 
-interface HierarchyLayoutProps {
+interface ViewHierarchyProps {
   manager: FabricateManager;
   selectedNode: ComponentTreeNode | null;
   [x: string]: unknown;
@@ -34,9 +34,9 @@ const HierarchyTreeContainer = styled.div`
 `;
 // #endregion styled
 
-export default function HierarchyLayout(props: HierarchyLayoutProps) {
+export default function ViewHierarchy(props: ViewHierarchyProps) {
   // #region variables
-  const { manager, selectedNode, ...other } = props;
+  const { manager, selectedNode } = props;
 
   const [contents, setContents] = useState<React.ReactElement[]>([]);
   // #endregion varibles
@@ -51,7 +51,7 @@ export default function HierarchyLayout(props: HierarchyLayoutProps) {
 
       for (const node of hrchyNodeList) {
         const comp = (
-          <HierarchyTreeComponent
+          <HierarchyTreeItem
             key={idx}
             compType={"type"}
             compName={node.getKey()}

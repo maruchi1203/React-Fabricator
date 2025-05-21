@@ -20,9 +20,9 @@ const GlobalStyles = createGlobalStyle`
   body {
     background-color: black;
     color: white;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segae UI',
+  @font-face { font-family: 'NanumBarunGothic';src: url('/fonts/NanumBarunGothic.eot');src: url('/fonts/NanumBarunGothic.eot') format('embedded-opentype'),url('/fonts/NanumBarunGothic.woff') format('woff'), system-ui, -apple-system, BlinkMacSystemFont, 'Segae UI',
     Roboto, Oxygen, Ubuntu, Centarell, 'Open Sans', 'Helvetica Neue',
-    sans-serif;
+    sans-serif;}
   }
 `;
 

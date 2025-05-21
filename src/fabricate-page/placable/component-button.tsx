@@ -2,16 +2,12 @@ import styled from "styled-components";
 
 interface ButtonProps {
   compKey: string;
-  style: { [key: string]: string | null };
   [x: string]: unknown;
 }
 
 // #region styled
 const Wrapper = styled.button`
   position: relative;
-
-  width: 100px;
-  height: 40px;
 
   background-color: white;
   border: 1px solid black;
@@ -20,17 +16,11 @@ const Wrapper = styled.button`
 // #endregion styled
 
 export default function ComponentButton(props: ButtonProps) {
-  const { compKey, style } = props;
+  const { compKey, ...other } = props;
 
   return (
-    <Wrapper
-      id={compKey}
-      key={compKey}
-      className="component button"
-      draggable="true"
-      style={style}
-    >
-      Button
+    <Wrapper id={compKey} key={compKey} className="component button" {...other}>
+      {other["content"] as string}
     </Wrapper>
   );
 }

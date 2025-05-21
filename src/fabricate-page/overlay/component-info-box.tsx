@@ -18,23 +18,6 @@ const CompInfo = styled.div`
 
 export default function ComponentInfoBox(props: EntityInfoBoxProps) {
   const { selectedNode } = props;
-  const styleOption = 
 
-  const variables = {
-    offsetleft: ,
-  };
-
-  return (
-    <Wrapper>
-      {
-        array.forEach(element => {
-          
-        });
-      }
-      <CompInfo>Left : {variables["left"] as string}</CompInfo>
-      <CompInfo>Top : {variables["top"] as string}</CompInfo>
-      <CompInfo>Width : {variables["left"] as string}</CompInfo>
-      <CompInfo>Height : {variables["left"] as string}</CompInfo>
-    </Wrapper>
-  );
+  return <Wrapper></Wrapper>;
 }

@@ -7,35 +7,25 @@ import {
 
 export default class ComponentTreeNode {
   private key: string;
+  private element: JSX.Element | null;
   private parent: ComponentTreeNode | null;
   private children: ComponentTreeNode[];
   private depth: number;
-  private elementInfo: { [key: string]: unknown } = {
-    // Size
-    width: "0",
-    height: "0",
-    // Position
-    offsetLeft: "0",
-    offsetTop: "0",
-    pageLeft: "0",
-    pageTop: "0",
-    // Relative Position
-    relativeStandardId: "",
-    relativeLeft: "0",
-    relativeRight: "0",
-    relativeTop: "0",
-    relativeBottom: "0",
-    // Dock
-    dock: "none", // none, left, top, center, bottom, right
-
-    // ETC
-    align: "",
-    color: "",
-    border: "",
-
-    // Flex
-
-    // Grid
+  private type: FunctionComponent;
+  private attributes: { [key: string]: unknown } = {
+    style: {
+      // Transform
+      position: "absolute",
+      // "{*ElementId} {left, center, right} {top, center, bottom}"
+      // ex) If pivot is "panel1 right top",
+      // this element will adjust its coordinates to panel1's top-right corner.
+      // If 2nd, 3rd param don't exist, {left} {top} will be default option.
+      pivot: "",
+      left: "0px",
+      top: "0px",
+      width: "0px",
+      height: "0px",
+    },
   };
 
   constructor(
@@ -43,13 +33,16 @@ export default class ComponentTreeNode {
     parent: ComponentTreeNode | null = null,
     children: ComponentTreeNode[] = [],
     depth: number = 0,
-    elementInfo: { [key: string]: unknown }
+    type: FunctionComponent,
+    attributes: { [key: string]: unknown }
   ) {
     this.key = key;
+    this.element = null;
     this.parent = parent;
     this.children = children;
     this.depth = depth;
-    this.elementInfo = elementInfo;
+    this.type = type;
+    this.attributes = attributes;
   }
 
   // Key
@@ -120,32 +113,50 @@ export default class ComponentTreeNode {
     this.depth = depth;
   }
 
-  // StyledOption
-  getStyleOption(key: string) {
-    const styleOption = (
-      this.elementInfo["props"] as { [key: string]: unknown }
-    )["style"] as { [key: string]: string };
-
-    return styleOption[key];
+  // Style
+  getStyleOption(key: string): string {
+    const style = this.attributes["style"] as { [key: string]: unknown };
+    return style[key] as string;
   }
 
-  // return react element
+  updateStyleOption<K extends keyof CSSStyleDeclaration>(
+    styleKey: K,
+    value: CSSStyleDeclaration[K]
+  ) {
+    if (this.element) {
+      const styleOption = this.attributes["style"] as {
+        [key: string]: unknown;
+      };
+      const oldVal = styleOption[styleKey as string];
+      styleOption[styleKey as string] = value;
+
+      const htmlElement = document.getElementById(this.key);
+      if (htmlElement) {
+        htmlElement.style[styleKey] = value;
+      }
+
+      return oldVal;
+    }
+    return null;
+  }
+
+  // Return tree
   createReactElementTree(): ReactElement[] {
     const elems = [];
 
     for (const child of this.children) {
       const childTree = child.createReactElementTree();
-      const elem = createElement(
-        child.elementInfo["type"] as FunctionComponent,
+
+      child.element = createElement(
+        child.type,
         {
           key: child.getKey(),
           compKey: child.getKey(),
-          ...(child.elementInfo["props"] as { [key: string]: unknown }),
+          ...child.attributes,
         } as Attributes,
         ...childTree
       ) as ReactElement;
-
-      elems.push(elem);
+      elems.push(child.element);
     }
     return elems;
   }
